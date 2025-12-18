@@ -1,0 +1,94 @@
+global
+    # log to sidecar rsyslog container
+    # with syslog facility to accomplish rsyslog-alpine cfg
+    log rsyslog syslog 
+
+    maxconn 20480
+    ############# IMPORTANT #################################
+    ## DO NOT SET CHROOT OTHERWISE YOU HAVE TO CHANGE THE  ##
+    ## acme-http01-webroot.lua file                        ##
+    # chroot /jail                                         ##
+    #########################################################
+    lua-load /etc/haproxy/acme-http01-webroot.lua
+    #
+    # SSL options
+    ssl-default-bind-ciphers AES256+EECDH:AES256+EDH:!aNULL;
+    tune.ssl.default-dh-param 4096
+
+    # workaround for bug #14 (Cert renewal blocks HAProxy indefinitely with Websocket connections)
+    hard-stop-after 3s
+
+# DNS runt-time resolution on backend hosts
+resolvers docker
+    nameserver dns "127.0.0.11:53"
+
+defaults
+    log global
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option forwardfor
+    option httplog
+
+    # never fail on address resolution
+    default-server init-addr last,libc,none
+
+frontend http
+    bind *:80
+    mode http
+    acl url_acme_http01 path_beg /.well-known/acme-challenge/
+    http-request use-service lua.acme-http01 if METH_GET url_acme_http01
+    redirect scheme https code 301 if !{ ssl_fc }
+
+    
+
+frontend https
+    bind *:443 ssl crt /etc/haproxy/certs/ no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11
+    http-response set-header Strict-Transport-Security "max-age=16000000; includeSubDomains; preload;"
+
+    ## get header part of the JWT
+    #http-request set-var(txn.alg) http_auth_bearer,jwt_header_query('$.alg')
+    
+    ## get payload part of the JWT
+    #http-request set-var(txn.iss) http_auth_bearer,jwt_payload_query('$.iss')
+    #http-request set-var(txn.aud) http_auth_bearer,jwt_payload_query('$.aud')
+    #http-request set-var(txn.exp) http_auth_bearer,jwt_payload_query('$.exp','int')
+    #http-request set-var(txn.scope) http_auth_bearer,jwt_payload_query('$.scope')
+    
+    ## Validate the JWT
+    #http-request deny content-type 'text/html' string 'Unsupported JWT signing algorithm'  unless { var(txn.alg) -m str RS256 }
+    #http-request deny content-type 'text/html' string 'Invalid JWT issuer'  unless { var(txn.iss) -m str https://myaccount.auth0.com/ }
+    #http-request deny content-type 'text/html' string 'Invalid JWT audience'  unless { var(txn.aud) -m str https://api.mywebsite.com }
+    #http-request deny content-type 'text/html' string 'Invalid JWT signature'  unless { http_auth_bearer,jwt_verify(txn.alg,"/pubkey.pem") -m int 1 }
+    
+    #http-request set-var(txn.now) date()
+    #http-request deny content-type 'text/html' string 'JWT has expired' if { var(txn.exp),sub(txn.now) -m int lt 0 }
+
+    acl is_root path -i /
+    acl is_domain hdr(host) -i hubs.chemie-lernen.org
+    acl is_chemie hdr(host) -i chemie-lernen.org
+    acl is_graphwiz hdr(host) -i graphwiz.ai
+    acl is_tobias hdr(host) -i next.tobias-weiss.org tobias-weiss.org www.tobias-weiss.org
+
+    use_backend hubs if { path_beg -i /assets }
+    use_backend hugo-chemie if is_chemie
+    use_backend hugo-graphwiz if is_graphwiz
+    use_backend hugo-tobias if is_tobias
+    default_backend reticulum
+
+backend reticulum
+    server reticulum reticulum:4000 resolvers docker resolve-prefer ipv4
+    http-request add-header X-Forwarded-Proto https if { ssl_fc }
+
+backend hubs
+    server hubs-client hubs-client:8080 resolvers docker resolve-prefer ipv4
+
+backend hugo-chemie-lernen-org
+    server hugo-chemie-lernen-org hugo-chemie-lernen-org:1313 resolvers docker resolve-prefer ipv4
+
+backend hugo-graphwiz-ai
+    server hugo-graphwiz hugo-graphwiz:1313 resolvers docker resolve-prefer ipv4
+
+backend hugo-tobias-weiss.org
+    server hugo-tobias-weiss.org hugo-tobias-weiss.org:1313 resolvers docker resolve-prefer ipv4

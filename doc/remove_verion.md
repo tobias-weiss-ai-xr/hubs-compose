@@ -1,0 +1,1 @@
+WARN[0000] /opt/git/hubs-compose/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
