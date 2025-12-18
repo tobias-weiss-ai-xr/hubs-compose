@@ -5,6 +5,8 @@ services:
       environment:
           - CERT1=hubs.chemie-lernen.org
           - CERT2=chemie-lernen.org
+          - CERT3=graphwiz.ai
+          - CERT4=next.tobias-weiss.org
           - EMAIL=admin@chemie-lernen.org
           - STAGING=false
       volumes:
