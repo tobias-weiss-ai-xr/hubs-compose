@@ -92,15 +92,24 @@ services:
     ports:
       - "9090:9090"
     # working_dir: /code # Removed
-  hugo:
-    build: ./hugo
+  hugo-chemie:
+    build: ./hugo-chemie-lernen-org
     command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
-      - ./hugo/myhugoapp:/app/myhugoapp
-      - ./hugo/public:/app/myhugoapp/public
+      - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
+      - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
     ports:
       - "1313:1313"
+  hugo-graphwiz:
+    build: ./hugo-graphwiz-ai
+    command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
+      - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
+    ports:
+      - "1314:1313"
   xwiki:
     image: "xwiki:17.10.0-postgres-tomcat"
     container_name: xwiki-web
@@ -140,7 +149,8 @@ services:
       - PLAYWRIGHT_BASE_URL=https://chemie-lernen.org
     depends_on:
       - haproxy
-      - hugo
+      - hugo-chemie
+      - hugo-graphwiz
       - xwiki
       - spoke
       - hubs-admin
