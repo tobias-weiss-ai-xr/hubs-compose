@@ -5,10 +5,10 @@
   - generic [ref=e2]:
     - link "three.js" [ref=e3] [cursor=pointer]:
       - /url: https://threejs.org
-    - text: css3d - periodic table.
+    - text: css3d - Periodensystem der Elemente.
   - generic [ref=e4]:
-    - button "TABLE" [ref=e5] [cursor=pointer]
-    - button "SPHERE" [ref=e6] [cursor=pointer]
+    - button "TABELLE" [ref=e5] [cursor=pointer]
+    - button "KUGEL" [ref=e6] [cursor=pointer]
     - button "HELIX" [ref=e7] [cursor=pointer]
-    - button "GRID" [ref=e8] [cursor=pointer]
+    - button "GITTER" [ref=e8] [cursor=pointer]
 ```
