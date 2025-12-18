@@ -94,7 +94,7 @@ services:
     # working_dir: /code # Removed
   hugo:
     build: ./hugo
-    command: hugo server --bind 0.0.0.0
+    command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo/myhugoapp:/app/myhugoapp
