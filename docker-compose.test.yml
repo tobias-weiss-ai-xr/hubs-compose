@@ -1,0 +1,161 @@
+version: "3.9"
+services:
+  haproxy:
+      container_name: haproxy
+      environment:
+          - CERT1=hubs.chemie-lernen.org
+          - CERT2=chemie-lernen.org
+          - EMAIL=admin@chemie-lernen.org
+          - STAGING=false
+      volumes:
+          - 'letsencrypt:/etc/letsencrypt'
+          - './haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg'
+      ports:
+          - '80:80'
+          - '443:443'
+      image: 'ghcr.io/tomdess/docker-haproxy-certbot:master'
+      depends_on:
+          - rsyslog
+  rsyslog:
+      container_name: rsyslog
+      environment:
+          - TZ=UTC
+      ports:
+          - '514:514'
+      image: 'rsyslog/syslog_appliance_alpine'
+  db:
+    environment:
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+    image: "postgres:14-alpine"
+    user: postgres
+    ports:
+      - "5432:5432"
+  dialog:
+    build: ./test_services
+    environment:
+      PORT: 4443
+    ports:
+      - "4443:4443"
+      - "40000-40050:40000-40050"
+      - "40000-40050:40000-40050/udp"
+    # working_dir: /code # Removed
+  hubs-admin:
+    build: ./test_services
+    environment:
+      PORT: 8989
+    ports:
+      - "8989:8989"
+    # working_dir: /code/admin # Removed
+  hubs-client:
+    build: ./test_services
+    environment:
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    # working_dir: /code # Removed
+  hubs-storybook:
+    build: ./test_services
+    environment:
+      PORT: 6006
+    ports:
+      - "6006:6006"
+    # working_dir: /code # Removed
+  postgrest:
+    build: ./test_services
+    environment:
+      PORT: 3000
+  reticulum:
+    container_name: reticulum
+    build: ./test_services
+    environment:
+      PORT: 4000
+      DB_CREDENTIALS: postgres
+      DB_HOST: db
+      DIALOG_HOSTNAME: "hubs.chemie-lernen.org"
+      DIALOG_PORT: 4443
+      HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
+      HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
+      POSTGREST_INTERNAL_HOSTNAME: postgrest
+      SPOKE_INTERNAL_HOSTNAME: spoke
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+  spoke:
+    build: ./test_services
+    environment:
+      PORT: 9090
+      CORS_PROXY_SERVER: "hubs-proxy.chemie-lernen.org"
+      INTERNAL_HOSTNAME: spoke
+    ports:
+      - "9090:9090"
+    # working_dir: /code # Removed
+  hugo:
+    build: ./hugo
+    command: hugo server --bind 0.0.0.0
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo/myhugoapp:/app/myhugoapp
+      - ./hugo/public:/app/myhugoapp/public
+    ports:
+      - "1313:1313"
+  xwiki:
+    image: "xwiki:17.10.0-postgres-tomcat"
+    container_name: xwiki-web
+    depends_on:
+      - xwiki-db
+    ports:
+      - "8081:8080"
+    environment:
+      - DB_USER=xwiki
+      - DB_PASSWORD=xwiki
+      - DB_DATABASE=xwiki
+      - DB_HOST=xwiki-db
+    volumes:
+      - xwiki-data:/usr/local/xwiki
+  xwiki-db:
+    image: "postgres:17"
+    container_name: xwiki-db
+    volumes:
+      - xwiki-postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_ROOT_PASSWORD=xwiki
+      - POSTGRES_PASSWORD=xwiki
+      - POSTGRES_USER=xwiki
+      - POSTGRES_DB=xwiki
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale-provider=builtin --locale=C.UTF-8
+
+  playwright-tests:
+    build:
+      context: ./tests
+      dockerfile: Dockerfile.playwright
+    volumes:
+      - ./tests:/app
+    extra_hosts:
+      - "chemie-lernen.org:172.17.0.1" # Docker host IP, typically 172.17.0.1
+      - "hubs.chemie-lernen.org:172.17.0.1" # Docker host IP
+    environment:
+      - PLAYWRIGHT_BASE_URL=https://chemie-lernen.org
+    depends_on:
+      - haproxy
+      - hugo
+      - xwiki
+      - spoke
+      - hubs-admin
+      - dialog
+      - hubs-storybook
+networks:
+  default:
+    name: mozilla-hubs
+volumes:
+  dialog:
+  hubs:
+  letsencrypt:
+  pgdata:
+  reticulum:
+  retstorage:
+  spoke:
+  xwiki-data:
+  xwiki-postgres-data:

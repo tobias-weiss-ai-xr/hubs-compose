@@ -1,0 +1,17 @@
+[Unit]
+Description=Docker Compose Application - Hubs Compose
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/git/hubs-compose
+ExecStartPre=/bin/bash -c "/usr/bin/docker ps -a -q --filter 'label=com.docker.compose.project=hubs-compose' | xargs docker rm -f || true"
+ExecStartPre=/bin/bash -c "/usr/bin/docker network ls -q --filter 'name=mozilla-hubs' | xargs docker network rm || true"
+ExecStartPre=/bin/bash -c "/usr/bin/docker-compose -f docker-compose.test.yml down --remove-orphans || true"
+ExecStart=/usr/bin/docker-compose -f docker-compose.test.yml up -d --build
+ExecStop=/usr/bin/docker-compose -f docker-compose.test.yml down --remove-orphans
+
+[Install]
+WantedBy=multi-user.target
