@@ -110,6 +110,15 @@ services:
       - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
     ports:
       - "1314:1313"
+  hugo-tobias:
+    build: ./hugo-next-tobias-weiss-org
+    command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo-next-tobias-weiss-org/myhugoapp:/app/myhugoapp
+      - ./hugo-next-tobias-weiss-org/public:/app/myhugoapp/public
+    ports:
+      - "1315:1313"
   xwiki:
     image: "xwiki:17.10.0-postgres-tomcat"
     container_name: xwiki-web
@@ -151,6 +160,7 @@ services:
       - haproxy
       - hugo-chemie
       - hugo-graphwiz
+      - hugo-tobias
       - xwiki
       - spoke
       - hubs-admin
