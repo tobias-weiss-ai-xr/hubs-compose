@@ -41,12 +41,13 @@ Multiple Hugo Containers (HTTP internally)
   - AI/XR enthusiasm and projects
   - Social media integration (GitHub, LinkedIn)
 
-### 3. **Tobias Weiss** - https://next.tobias-weiss.org
+### 3. **Tobias Weiss** - https://tobias-weiss.org (also https://www.tobias-weiss.org, https://next.tobias-weiss.org)
 - **Directory**: `hugo-next-tobias-weiss-org/`
 - **Port**: 1315
 - **Theme**: tobi-goa
 - **Language**: English (en-US)
 - **Content**: Personal homepage
+- **Domains**: tobias-weiss.org, www.tobias-weiss.org, next.tobias-weiss.org
 - **Sections**:
   - Photo Gallery
   - PGP/GPG Keys
@@ -92,7 +93,7 @@ frontend https
     # Domain routing
     acl is_chemie hdr(host) -i chemie-lernen.org
     acl is_graphwiz hdr(host) -i graphwiz.ai
-    acl is_tobias hdr(host) -i next.tobias-weiss.org
+    acl is_tobias hdr(host) -i next.tobias-weiss.org tobias-weiss.org www.tobias-weiss.org
 
     # Backend selection
     use_backend hugo-chemie if is_chemie
@@ -121,6 +122,8 @@ Managed by `docker-haproxy-certbot`:
 - chemie-lernen.org
 - graphwiz.ai
 - next.tobias-weiss.org
+- tobias-weiss.org
+- www.tobias-weiss.org
 
 ## Directory Structure
 

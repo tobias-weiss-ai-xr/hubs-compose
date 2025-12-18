@@ -7,7 +7,9 @@ services:
           - CERT2=chemie-lernen.org
           - CERT3=graphwiz.ai
           - CERT4=next.tobias-weiss.org
-          - EMAIL=admin@chemie-lernen.org
+          - CERT5=tobias-weiss.org
+          - CERT6=www.tobias-weiss.org
+          - EMAIL=spam@tobias-weiss.org
           - STAGING=false
       volumes:
           - 'letsencrypt:/etc/letsencrypt'
