@@ -8,7 +8,7 @@ test.describe('Service Health Checks', () => {
 
   test('Hugo via HAProxy is reachable and content matches', async ({ page }) => {
     await page.goto(`https://${DOMAIN}/`);
-    await expect(page).toHaveTitle(/My New Hugo Site/);
+    await expect(page).toHaveTitle(/Chemie Lernen/);
   });
 
   test('Periodic Table Page is reachable and has expected content', async ({ page }) => {

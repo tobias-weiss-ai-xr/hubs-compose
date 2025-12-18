@@ -9,9 +9,9 @@ RemainAfterExit=yes
 WorkingDirectory=/opt/git/hubs-compose
 ExecStartPre=/bin/bash -c "/usr/bin/docker ps -a -q --filter 'label=com.docker.compose.project=hubs-compose' | xargs docker rm -f || true"
 ExecStartPre=/bin/bash -c "/usr/bin/docker network ls -q --filter 'name=mozilla-hubs' | xargs docker network rm || true"
-ExecStartPre=/bin/bash -c "/usr/bin/docker-compose -f docker-compose.test.yml down --remove-orphans || true"
-ExecStart=/usr/bin/docker-compose -f docker-compose.test.yml up -d --build
-ExecStop=/usr/bin/docker-compose -f docker-compose.test.yml down --remove-orphans
+ExecStartPre=/bin/bash -c "/usr/bin/docker-compose -f docker-compose.haproxy.yml -f docker-compose.hubs.yml -f docker-compose.hugo.yml down --remove-orphans || true"
+ExecStart=/usr/bin/docker-compose -f docker-compose.haproxy.yml -f docker-compose.hubs.yml -f docker-compose.hugo.yml up -d --build
+ExecStop=/usr/bin/docker-compose -f docker-compose.haproxy.yml -f docker-compose.hubs.yml -f docker-compose.hugo.yml down --remove-orphans
 
 [Install]
 WantedBy=multi-user.target

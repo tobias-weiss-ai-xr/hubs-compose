@@ -91,6 +91,17 @@ Some scripts used to run `hubs-compose` are meant to run in a Unix-like `bash` s
   - Note: this will not affect the GitHub repositories cloned into the `services` folder, it will just ignore them.
 * You can restart Hubs Compose with this chained command: `bin/down && mutagen daemon stop && bin/up`
 
+### Systemd Service
+
+For persistent deployments or testing, a Systemd service is available:
+
+*   **Service Name**: `hubs-compose.service`
+*   **Start**: `sudo systemctl start hubs-compose`
+*   **Stop**: `sudo systemctl stop hubs-compose`
+*   **Restart**: `sudo systemctl restart hubs-compose`
+*   **Status**: `sudo systemctl status hubs-compose`
+*   **Note**: This service uses `docker-compose.test.yml` instead of the standard `docker-compose.yml` and does not use Mutagen. Ensure your configuration in `docker-compose.test.yml` is correct.
+
 [^1]: Requires `tmux` and `watch` program files in the user’s path
 
 ### Self-Signed Certificates
