@@ -1,113 +1,149 @@
 services:
-  haproxy:
-      container_name: haproxy
-      environment:
-          - CERT1=hubs.chemie-lernen.org
-          - CERT2=chemie-lernen.org
-          - CERT3=tobias-weiss.org
-          - CERT4=next.tobias-weiss.org
-          - EMAIL=admin@chemie-lernen.org
-          - STAGING=false
-      volumes:
-          - 'letsencrypt:/etc/letsencrypt'
-          - './haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg'
-      ports:
-          - '80:80'
-          - '443:443'
-      image: 'ghcr.io/tomdess/docker-haproxy-certbot:master'
-  db:
-    environment:
-      POSTGRES_PASSWORD: postgres
-    image: "postgres:14-alpine"
-    user: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-  dialog:
-    image: node:18
-    environment:
-      AUTH_KEY: /etc/perms.pub.pem
-      HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
-      HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
-      INTERACTIVE: "false"
-      MEDIASOUP_MIN_PORT: 40000
-      MEDIASOUP_MAX_PORT: 40010
-      MEDIASOUP_ANNOUNCED_IP: ${PRIVATE_NETWORK_IP}
-    ports:
-      - "4443:4443"
-      - "40000-40010:40000-40010"
-      - "40000-40010:40000-40010/udp"
-    volumes:
-      - /opt/git/hubs-compose/services/dialog:/code
-    working_dir: /code
-    command: bash -c "npm install && npm start"
-  hubs-admin:
-    image: node:20.16
-    environment:
-      INTERNAL_HOSTNAME: hubs-admin
-    volumes:
-      - /opt/git/hubs-compose/hubs/admin:/code/admin
-    working_dir: /code/admin
-    command: bash -c "npm install && npm run local"
-  hubs-client:
-    image: node:20.16
-    environment:
-      INTERNAL_HOSTNAME: hubs-client
-    volumes:
-      - /opt/git/hubs-compose/hubs/client:/code/client
-    working_dir: /code/client
-    command: bash -c "npm install && npm run local"
-  postgrest:
-    build:
-      context: .
-      dockerfile: dockerfiles/postgrest.Dockerfile
-  reticulum:
-    container_name: reticulum
-    build:
-      context: ./services/reticulum
-      dockerfile: TurkeyDockerfile
-      target: dev
-    depends_on:
-      - db
-    environment:
-      DB_CREDENTIALS: postgres
-      DB_HOST: db
-      DIALOG_HOSTNAME: "hubs.chemie-lernen.org"
-      DIALOG_PORT: 4443
-      HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
-      HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
-      POSTGREST_INTERNAL_HOSTNAME: postgrest
-    volumes:
-      - reticulum:/code
-      - letsencrypt:/code/certs
-      - retstorage:/code/storage/dev
-  hugo-chemie-lernen-org:
-    build: ./hugo-chemie-lernen-org
-    command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
-    working_dir: /app/myhugoapp
-    volumes:
-      - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
-      - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
-  hugo-tobias-weiss-org:
-    build: ./hugo-tobias-weiss-org
-    command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
-    working_dir: /app/myhugoapp
-    volumes:
-      - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
-      - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
-  hugo-graphwiz-ai:
-    build: ./hugo-graphwiz-ai
-    command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
-    working_dir: /app/myhugoapp
-    volumes:
-      - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
-      - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
+    haproxy:
+        container_name: haproxy
+        environment:
+            - CERT1=hubs.chemie-lernen.org
+            - CERT2=chemie-lernen.org
+            - CERT3=tobias-weiss.org
+            - CERT4=next.tobias-weiss.org
+            - EMAIL=admin@chemie-lernen.org
+            - STAGING=false
+        volumes:
+            - 'letsencrypt:/etc/letsencrypt'
+            - './haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg'
+        ports:
+            - '80:80'
+            - '443:443'
+        image: 'ghcr.io/tomdess/docker-haproxy-certbot:master'
+    db:
+        environment:
+            POSTGRES_PASSWORD: postgres
+        image: "postgres:14-alpine"
+        user: postgres
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+            - ./db-init:/docker-entrypoint-initdb.d
+    dialog:
+        image: node:18
+        environment:
+            AUTH_KEY: /etc/perms.pub.pem
+            HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
+            HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
+            INTERACTIVE: "false"
+            MEDIASOUP_MIN_PORT: 40000
+            MEDIASOUP_MAX_PORT: 40010
+            MEDIASOUP_ANNOUNCED_IP: ${PRIVATE_NETWORK_IP}
+        ports:
+            - "4443:4443"
+            - "40000-40010:40000-40010"
+            - "40000-40010:40000-40010/udp"
+        volumes:
+            - /opt/git/hubs-compose/services/dialog:/code
+        working_dir: /code
+        command: bash -c "npm install && npm start"
+    hubs-admin:
+        image: node:20.16
+        environment:
+            INTERNAL_HOSTNAME: hubs-admin
+        volumes:
+            - /opt/git/hubs-compose/hubs/admin:/code/admin
+        working_dir: /code/admin
+        command: bash -c "npm install && npm run local"
+    hubs-client:
+        image: node:20.16
+        environment:
+            INTERNAL_HOSTNAME: hubs-client
+        volumes:
+            - /opt/git/hubs-compose/hubs/client:/code/client
+        working_dir: /code/client
+        command: bash -c "npm install && npm run local"
+    postgrest:
+        build:
+            context: .
+            dockerfile: dockerfiles/postgrest.Dockerfile
+    reticulum:
+        container_name: reticulum
+        build:
+            context: ./services/reticulum
+            dockerfile: TurkeyDockerfile
+            target: dev
+        depends_on:
+            - db
+        environment:
+            DB_CREDENTIALS: postgres
+            DB_HOST: db
+            DIALOG_HOSTNAME: "hubs.chemie-lernen.org"
+            DIALOG_PORT: 4443
+            HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
+            HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
+            POSTGREST_INTERNAL_HOSTNAME: postgrest
+        volumes:
+            - reticulum:/code
+            - letsencrypt:/code/certs
+            - retstorage:/code/storage/dev
+    hugo-base:
+        working_dir: /app/myhugoapp
+    hugo-chemie-lernen-org:
+        extends: hugo-base
+        build: ./hugo-chemie-lernen-org
+        command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
+        volumes:
+            - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
+            - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
+    hugo-tobias-weiss-org:
+        extends: hugo-base
+        build: ./hugo-tobias-weiss-org
+        command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
+        volumes:
+            - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
+            - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
+    hugo-graphwiz-ai:
+        extends: hugo-base
+        build: ./hugo-graphwiz-ai
+        command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
+        volumes:
+            - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
+            - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
+    neo4j:
+        image: neo4j:5.23-community
+        container_name: neo4j
+        environment:
+            NEO4J_AUTH: neo4j/neo4jpassword
+            NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+        ports:
+            - "7474:7474"
+            - "7687:7687"
+        volumes:
+            - neo4j_data:/var/lib/neo4j/data
+            - neo4j_logs:/var/lib/neo4j/logs
+    mcp-neo4j-memory:
+        build:
+            context: .
+            dockerfile: dockerfiles/mcp-neo4j-memory.Dockerfile
+        container_name: mcp-neo4j-memory
+        depends_on:
+            - neo4j
+        environment:
+            NEO4J_URI: bolt://neo4j:7687
+            NEO4J_USERNAME: neo4j
+            NEO4J_PASSWORD: neo4jpassword
+            NEO4J_DATABASE: neo4j
+            NEO4J_TRANSPORT: http
+            NEO4J_MCP_SERVER_HOST: 0.0.0.0
+            NEO4J_MCP_SERVER_PORT: "8000"
+            NEO4J_MCP_SERVER_PATH: /mcp/
+            NEO4J_MCP_SERVER_ALLOWED_HOSTS: localhost,127.0.0.1,mcp-neo4j-memory
+        ports:
+            - "8000:8000"
 networks:
-  default:
-    name: mozilla-hubs
+    default:
+        name: mozilla-hubs
 volumes:
-  dialog:
-  hubs:
-  letsencrypt:
-  pgdata:
-  reticulum:
-  retstorage:
+    dialog:
+    hubs:
+    letsencrypt:
+    pgdata:
+    reticulum:
+    retstorage:
+    neo4j_data:
+    neo4j_logs:
