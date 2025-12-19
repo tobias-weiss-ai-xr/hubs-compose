@@ -4,6 +4,8 @@ services:
       environment:
           - CERT1=hubs.chemie-lernen.org
           - CERT2=chemie-lernen.org
+          - CERT3=tobias-weiss.org
+          - CERT4=next.tobias-weiss.org
           - EMAIL=admin@chemie-lernen.org
           - STAGING=false
       volumes:
@@ -21,9 +23,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
   dialog:
-    build:
-      context: .
-      dockerfile: dockerfiles/dialog.Dockerfile
+    image: node:18
     environment:
       AUTH_KEY: /etc/perms.pub.pem
       HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
@@ -37,28 +37,25 @@ services:
       - "40000-40010:40000-40010"
       - "40000-40010:40000-40010/udp"
     volumes:
-      - dialog:/code
+      - /opt/git/hubs-compose/services/dialog:/code
     working_dir: /code
+    command: bash -c "npm install && npm start"
   hubs-admin:
-    build:
-      context: .
-      dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    image: node:20.16
     environment:
       INTERNAL_HOSTNAME: hubs-admin
     volumes:
-      - hubs:/code
+      - /opt/git/hubs-compose/hubs/admin:/code/admin
     working_dir: /code/admin
+    command: bash -c "npm install && npm run local"
   hubs-client:
-    build:
-      context: .
-      dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    image: node:20.16
     environment:
       INTERNAL_HOSTNAME: hubs-client
     volumes:
-      - hubs:/code
-    working_dir: /code
+      - /opt/git/hubs-compose/hubs/client:/code/client
+    working_dir: /code/client
+    command: bash -c "npm install && npm run local"
   postgrest:
     build:
       context: .
