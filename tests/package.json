@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.45.0"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.39.0"
   }
 }

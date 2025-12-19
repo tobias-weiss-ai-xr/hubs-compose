@@ -32,11 +32,15 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    command: /bin/sh -c "/usr/local/bin/conditional-npm-ci && npm run local"
     environment:
       INTERNAL_HOSTNAME: hubs-admin
       HOST: hubs.chemie-lernen.org
       RETICULUM_SOCKET_SERVER: hubs.chemie-lernen.org
+      WDS_SOCKET_PORT: 443
+      BASE_ASSETS_PATH: /admin/
+      RETICULUM_SERVER: hubs.chemie-lernen.org
+      UPLOADS_HOST: hubs.chemie-lernen.org
     ports:
       - "8989:8989"
     volumes:
@@ -47,11 +51,15 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    command: /bin/sh -c "/usr/local/bin/conditional-npm-ci && npm run local"
     environment:
       INTERNAL_HOSTNAME: hubs-client
       HOST: hubs.chemie-lernen.org
       RETICULUM_SOCKET_SERVER: hubs.chemie-lernen.org
+      WDS_SOCKET_PORT: 443
+      BASE_ASSETS_PATH: /
+      RETICULUM_SERVER: hubs.chemie-lernen.org
+      UPLOADS_HOST: hubs.chemie-lernen.org
     ports:
       - "8080:8080"
     volumes:

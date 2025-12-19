@@ -9,6 +9,10 @@ services:
           - CERT5=tobias-weiss.org
           - CERT6=www.tobias-weiss.org
           - CERT7=wiki.chemie-lernen.org
+          - CERT8=mail.graphwiz.ai
+          - CERT9=mail.chemie-lernen.org
+          - CERT10=mail.tobias-weiss.org
+          - CERT11=mail.graphwiz.de
           - EMAIL=spam@tobias-weiss.org
           - STAGING=false
       volumes:

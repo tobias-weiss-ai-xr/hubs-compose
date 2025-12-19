@@ -13,26 +13,13 @@ services:
           - '80:80'
           - '443:443'
       image: 'ghcr.io/tomdess/docker-haproxy-certbot:master'
-      depends_on:
-          - rsyslog
-  rsyslog:
-      container_name: rsyslog
-      environment:
-          - TZ=UTC
-      ports:
-          - '514:514'
-      image: 'rsyslog/syslog_appliance_alpine'
   db:
     environment:
       POSTGRES_PASSWORD: postgres
-    healthcheck:
-      test: ["CMD", "pg_isready"]
     image: "postgres:14-alpine"
     user: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
   dialog:
     build:
       context: .
@@ -43,15 +30,12 @@ services:
       HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
       INTERACTIVE: "false"
       MEDIASOUP_MIN_PORT: 40000
-      MEDIASOUP_MAX_PORT: 40050
+      MEDIASOUP_MAX_PORT: 40010
       MEDIASOUP_ANNOUNCED_IP: ${PRIVATE_NETWORK_IP}
     ports:
       - "4443:4443"
-      # This should be the same as MEDIASOUP_MIN_PORT and MEDIASOUP_MAX_PORT
-      # You might neeed to increase this number depending on how many clients you are connecting.
-      # (Keep the ports range small to improve container startup time)
-      - "40000-40050:40000-40050"
-      - "40000-40050:40000-40050/udp"
+      - "40000-40010:40000-40010"
+      - "40000-40010:40000-40010/udp"
     volumes:
       - dialog:/code
     working_dir: /code
@@ -62,11 +46,6 @@ services:
     command: npm run local
     environment:
       INTERNAL_HOSTNAME: hubs-admin
-    healthcheck:
-      test: ["CMD", "curl", "-fk", "https://localhost:8989/admin.html"]
-    platform: linux/amd64
-    ports:
-      - "8989:8989"
     volumes:
       - hubs:/code
     working_dir: /code/admin
@@ -77,25 +56,6 @@ services:
     command: npm run local
     environment:
       INTERNAL_HOSTNAME: hubs-client
-    healthcheck:
-      start_period: 3m30s
-      test: ["CMD", "curl", "-fk", "https://localhost:8080"]
-    platform: linux/amd64
-    ports:
-      - "8080:8080"
-    volumes:
-      - hubs:/code
-    working_dir: /code
-  hubs-storybook:
-    build:
-      context: .
-      dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run storybook
-    healthcheck:
-      test: ["CMD", "curl", "-fk", "http://localhost:6006"]
-    platform: linux/amd64
-    ports:
-      - "6006:6006"
     volumes:
       - hubs:/code
     working_dir: /code
@@ -109,8 +69,6 @@ services:
       context: ./services/reticulum
       dockerfile: TurkeyDockerfile
       target: dev
-    ports:
-      - "4000:4000"
     depends_on:
       - db
     environment:
@@ -121,69 +79,31 @@ services:
       HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
       HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
       POSTGREST_INTERNAL_HOSTNAME: postgrest
-      SPOKE_INTERNAL_HOSTNAME: spoke
     volumes:
       - reticulum:/code
       - letsencrypt:/code/certs
       - retstorage:/code/storage/dev
-  spoke:
-    build:
-      context: .
-      dockerfile: dockerfiles/spoke.Dockerfile
-    environment:
-      CORS_PROXY_SERVER: "hubs-proxy.chemie-lernen.org"
-      INTERNAL_HOSTNAME: spoke
-    platform: linux/amd64
-    ports:
-      - "9090:9090"
-    volumes:
-      - spoke:/code
   hugo-chemie-lernen-org:
     build: ./hugo-chemie-lernen-org
-    command: hugo server --bind 0.0.0.0
+    command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
       - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
   hugo-tobias-weiss-org:
     build: ./hugo-tobias-weiss-org
-    command: hugo server --bind 0.0.0.0
+    command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
       - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
   hugo-graphwiz-ai:
     build: ./hugo-graphwiz-ai
-    command: hugo server --bind 0.0.0.0
+    command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
       - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
-  xwiki:
-    image: "xwiki:17.10.0-postgres-tomcat"
-    container_name: xwiki-web
-    depends_on:
-      - xwiki-db
-    ports:
-      - "8081:8080"
-    environment:
-      - DB_USER=xwiki
-      - DB_PASSWORD=xwiki
-      - DB_DATABASE=xwiki
-      - DB_HOST=xwiki-db
-    volumes:
-      - xwiki-data:/usr/local/xwiki
-  xwiki-db:
-    image: "postgres:17"
-    container_name: xwiki-db
-    volumes:
-      - xwiki-postgres-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_ROOT_PASSWORD=xwiki
-      - POSTGRES_PASSWORD=xwiki
-      - POSTGRES_USER=xwiki
-      - POSTGRES_DB=xwiki
-      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale-provider=builtin --locale=C.UTF-8
 networks:
   default:
     name: mozilla-hubs
@@ -194,42 +114,3 @@ volumes:
   pgdata:
   reticulum:
   retstorage:
-  spoke:
-  xwiki-data:
-  xwiki-postgres-data:
-x-mutagen:
-  sync:
-    defaults:
-      ignore:
-        paths:
-          - ".DS_Store"
-          - ".gitignore"
-          - "/certs/"
-          - "/node_modules/"
-          - "package-lock.sha512"
-        vcs: true
-      mode: "two-way-resolved"
-    dialog:
-      alpha: ./services/dialog
-      beta: "volume://dialog"
-    hubs:
-      alpha: ./services/hubs
-      beta: "volume://hubs"
-      ignore:
-        paths:
-          - "/admin/certs/"
-          - "/admin/node_modules/"
-    letsencrypt:
-      alpha: ./haproxy/letsencrypt
-      beta: "volume://letsencrypt"
-    reticulum:
-      alpha: ./services/reticulum
-      beta: "volume://reticulum"
-      ignore:
-        paths:
-          - "/_build/"
-          - "/bin/"
-          - "/storage/"
-    spoke:
-      alpha: ./services/spoke
-      beta: "volume://spoke"
