@@ -141,6 +141,8 @@ test_content "https://graphwiz.ai/focus-areas/" "Core Pillars &amp; Focus Areas"
 echo ""
 
 echo "=== Tobias Weiss Content Tests ==="
+test_url "https://next.tobias-weiss.org/img/me_wanted_big.png" 200 "Me wanted logo presence" 1000
+test_content "https://next.tobias-weiss.org/" "me_wanted_big.png" "Me wanted logo reference in HTML"
 test_url "https://next.tobias-weiss.org/gallery/" 200 "Gallery page" 2000
 test_url "https://next.tobias-weiss.org/pgp/" 200 "PGP page" 2000
 test_url "https://next.tobias-weiss.org/research/" 200 "Research page" 1000

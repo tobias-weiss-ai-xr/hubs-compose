@@ -85,7 +85,6 @@ services:
       - "8080:8080"
     volumes:
       - hubs:/code
-      - letsencrypt:/code/certs
     working_dir: /code
   hubs-storybook:
     build:
@@ -144,22 +143,22 @@ services:
     command: hugo server --bind 0.0.0.0
     working_dir: /app/myhugoapp
     volumes:
-      - ./hugo/myhugoapp:/app/myhugoapp
-      - ./hugo/public:/app/myhugoapp/public
+      - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
+      - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
   hugo-tobias-weiss-org:
     build: ./hugo-tobias-weiss-org
     command: hugo server --bind 0.0.0.0
     working_dir: /app/myhugoapp
     volumes:
-      - ./hugo/myhugoapp:/app/myhugoapp
-      - ./hugo/public:/app/myhugoapp/public
+      - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
+      - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
   hugo-graphwiz-ai:
     build: ./hugo-graphwiz-ai
     command: hugo server --bind 0.0.0.0
     working_dir: /app/myhugoapp
     volumes:
-      - ./hugo/myhugoapp:/app/myhugoapp
-      - ./hugo/public:/app/myhugoapp/public
+      - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
+      - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
   xwiki:
     image: "xwiki:17.10.0-postgres-tomcat"
     container_name: xwiki-web
