@@ -39,6 +39,7 @@ echo -e ${prefix}Initializing Hubs Client$suffix &&
 docker compose -f "$composefile" build hubs-client &&
 mutagen-compose -f "$composefile" run --rm hubs-client conditional-npm-ci &&
 echo -e ${prefix}Initializing Spoke$suffix &&
+docker compose -f "$composefile" build spoke &&
 mutagen-compose -f "$composefile" run --rm spoke yarn install
 
 code=$?

@@ -2,7 +2,7 @@ services:
   hugo-chemie-lernen-org:
     build: ./hugo-chemie-lernen-org
     container_name: hugo-chemie-lernen-org
-    command: hugo server --bind 0.0.0.0 --baseURL http://hugo-chemie-lernen-org --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
