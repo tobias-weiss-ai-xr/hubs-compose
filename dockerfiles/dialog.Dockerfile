@@ -7,8 +7,10 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /code
+
 # --- Added line to ensure pip is available ---
-RUN python3 -m ensurepip --upgrade
+
 # --- End of added line ---
 
 COPY files/conditional-npm-ci /usr/local/bin/conditional-npm-ci

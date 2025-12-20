@@ -1,0 +1,31 @@
+#!/bin/bash
+# Wrapper script for starting Hubs Compose services via Systemd
+set -e
+
+# Determine IP address
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    IP_ADDR=$(ip route get 1 | awk '{print $NF;exit}')
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS (unlikely for systemd, but kept for parity)
+    IP_ADDR=$(ifconfig -l | xargs -n1 ipconfig getifaddr)
+else
+    # Fallback or other OS
+    IP_ADDR="127.0.0.1"
+fi
+
+export PRIVATE_NETWORK_IP=${IP_ADDR}
+echo "Starting Hubs Compose with PRIVATE_NETWORK_IP=${PRIVATE_NETWORK_IP}"
+
+# Run docker compose up
+# Note: We use 'docker compose' (plugin) instead of 'docker-compose' (standalone)
+# We include xwiki here to match bin/up logic if desired, or stick to what was in the service file.
+# The previous service file had: haproxy, hubs, hugo. bin/up has xwiki too.
+# I will include xwiki.
+
+/usr/bin/docker compose \
+    -f docker-compose.haproxy.yml \
+    -f docker-compose.hubs.yml \
+    -f docker-compose.hugo.yml \
+    -f docker-compose.xwiki.yml \
+    up -d --build

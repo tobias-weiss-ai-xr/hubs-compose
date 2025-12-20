@@ -1,0 +1,20 @@
+#!/bin/bash
+# Wrapper script for stopping Hubs Compose services via Systemd
+set -e
+
+# We might not need IP for down, but good to have env vars consistent if used in interpolation
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    IP_ADDR=$(ip route get 1 | awk '{print $NF;exit}')
+else
+    IP_ADDR="127.0.0.1"
+fi
+export PRIVATE_NETWORK_IP=${IP_ADDR}
+
+echo "Stopping Hubs Compose..."
+
+/usr/bin/docker compose \
+    -f docker-compose.haproxy.yml \
+    -f docker-compose.hubs.yml \
+    -f docker-compose.hugo.yml \
+    -f docker-compose.xwiki.yml \
+    down --remove-orphans

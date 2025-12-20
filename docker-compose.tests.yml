@@ -1,0 +1,8 @@
+services:
+  tests:
+    image: python:3.11-slim
+    working_dir: /work
+    volumes:
+      - ./:/work
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: bash -lc "pip install docker -q && python3 test_docker_compose_logs_standalone.py"
