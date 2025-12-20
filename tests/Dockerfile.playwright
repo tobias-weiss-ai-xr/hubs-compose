@@ -1,0 +1,18 @@
+# Use a Node.js LTS image as a base
+FROM node:lts
+
+# Set working directory
+WORKDIR /app
+
+# Install Node.js dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Install Playwright browsers (Chromium by default)
+RUN npx playwright install --with-deps
+
+# Copy test files
+COPY . .
+
+# Command to run tests
+CMD ["npx", "playwright", "test"]

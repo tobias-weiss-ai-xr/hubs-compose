@@ -6,24 +6,39 @@ prefix='\n\033[1;37m'
 suffix='\033[0m\n'
 
 servicesdir=$basedir/services
-echo -e ${prefix}Cloning source repositories$suffix
-git clone https://github.com/Hubs-Foundation/reticulum.git "$servicesdir"/reticulum
-git clone https://github.com/Hubs-Foundation/dialog.git "$servicesdir"/dialog
-git clone https://github.com/Hubs-Foundation/hubs.git "$servicesdir"/hubs
-git clone https://github.com/Hubs-Foundation/Spoke.git "$servicesdir"/spoke
+mkdir -p "$servicesdir"
 
-composefile=$basedir/docker compose.yml
+echo -e ${prefix}Cloning source repositories$suffix
+
+clone_if_missing() {
+    url=$1
+    dest=$2
+    if [ ! -d "$dest" ]; then
+        git clone "$url" "$dest"
+    else
+        echo "Directory $dest already exists, skipping clone."
+    fi
+}
+
+clone_if_missing https://github.com/Hubs-Foundation/reticulum.git "$servicesdir"/reticulum
+clone_if_missing https://github.com/Hubs-Foundation/dialog.git "$servicesdir"/dialog
+clone_if_missing https://github.com/Hubs-Foundation/hubs.git "$servicesdir"/hubs
+clone_if_missing https://github.com/Hubs-Foundation/Spoke.git "$servicesdir"/spoke
+
+composefile=$basedir/docker-compose.hubs.yml
 echo -e ${prefix}Initializing Reticulum$suffix &&
 docker compose -f "$composefile" build reticulum &&
 mutagen-compose -f "$composefile" run --rm reticulum sh -c 'trapped-mix do deps.get, deps.compile, ecto.create' &&
 echo -e ${prefix}Initializing Dialog$suffix &&
 docker compose -f "$composefile" build dialog &&
-mutagen-compose -f "$composefile" run --rm dialog sh -c '[ -d "node_modules" ] || npm cache clear --force || npm ci' &&
+mutagen-compose -f "$composefile" run --rm dialog conditional-npm-ci &&
 echo -e ${prefix}Initializing Hubs Admin$suffix &&
 docker compose -f "$composefile" build hubs-admin &&
 mutagen-compose -f "$composefile" run --rm hubs-admin conditional-npm-ci &&
 echo -e ${prefix}Initializing Hubs Client$suffix &&
-docker compose -f "$composefile" build hubs-client && mutagen-compose -f "$composefile" run --rm hubs-client conditional-npm-ci && echo -e ${prefix}Initializing Spoke$suffix &&
+docker compose -f "$composefile" build hubs-client &&
+mutagen-compose -f "$composefile" run --rm hubs-client conditional-npm-ci &&
+echo -e ${prefix}Initializing Spoke$suffix &&
 mutagen-compose -f "$composefile" run --rm spoke yarn install
 
 code=$?

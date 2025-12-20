@@ -1,0 +1,33 @@
+baseURL = "https://chemie-lernen.org/"
+languageCode = "de-de"
+title = "Chemie Lernen"
+theme = "hugo-cards"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
+[params]
+  github = "tobias-weiss-ai-xr"
+  custom_css = ["css/custom.css"]
+  defaultImage = "gopher.jpg"
+  footer_description = "Chemie Lernen - Ihre Plattform für interaktive Chemie-Lernräume (in VR)."
+
+[[menu.main]]
+    name = "Wiki"
+    url = "https://wiki.chemie-lernen.org/"
+    weight = 10
+[[menu.main]]
+    name = "Hubs"
+    url = "https://hubs.chemie-lernen.org/"
+    weight = 20
+[[menu.main]]
+    name = "Über uns"
+    url = "/pages/about/"
+    weight = 30
+[[menu.main]]
+    name = "Kontakt"
+    url = "/pages/contact/"
+    weight = 40
+

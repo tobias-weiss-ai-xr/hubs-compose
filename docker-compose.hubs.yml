@@ -1,0 +1,128 @@
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+    image: "postgres:14-alpine"
+    user: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  dialog:
+    build:
+      context: .
+      dockerfile: dockerfiles/dialog.Dockerfile
+    environment:
+      AUTH_KEY: /etc/perms.pub.pem
+      HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
+      HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
+      INTERACTIVE: "false"
+      MEDIASOUP_MIN_PORT: 40000
+      MEDIASOUP_MAX_PORT: 40050
+      MEDIASOUP_ANNOUNCED_IP: ${PRIVATE_NETWORK_IP}
+    ports:
+      - "4443:4443"
+      - "40000-40050:40000-40050"
+      - "40000-40050:40000-40050/udp"
+    volumes:
+      - ./services/dialog:/code
+  hubs-admin:
+    build:
+      context: .
+      dockerfile: dockerfiles/hubs.Dockerfile
+    command: /bin/sh -c "/usr/local/bin/conditional-npm-ci && npm run local"
+    environment:
+      INTERNAL_HOSTNAME: hubs-admin
+      HOST: hubs.chemie-lernen.org
+      RETICULUM_SOCKET_SERVER: hubs.chemie-lernen.org
+      WDS_SOCKET_PORT: 443
+      BASE_ASSETS_PATH: /admin/
+      RETICULUM_SERVER: hubs.chemie-lernen.org
+      UPLOADS_HOST: hubs.chemie-lernen.org
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./services/hubs:/code
+      - ./services/hubs/certs:/code/certs
+    working_dir: /code/admin
+  hubs-client:
+    build:
+      context: .
+      dockerfile: dockerfiles/hubs.Dockerfile
+    command: /bin/sh -c "/usr/local/bin/conditional-npm-ci && npm run local"
+    environment:
+      INTERNAL_HOSTNAME: hubs-client
+      HOST: hubs.chemie-lernen.org
+      RETICULUM_SOCKET_SERVER: hubs.chemie-lernen.org
+      WDS_SOCKET_PORT: 443
+      BASE_ASSETS_PATH: /
+      RETICULUM_SERVER: hubs.chemie-lernen.org
+      UPLOADS_HOST: hubs.chemie-lernen.org
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./services/hubs:/code
+      - ./services/hubs/certs:/code/certs
+    working_dir: /code
+  hubs-storybook:
+    build:
+      context: .
+      dockerfile: dockerfiles/hubs.Dockerfile
+    command: npm run storybook
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./services/hubs:/code
+    working_dir: /code
+  postgrest:
+    build:
+      context: .
+      dockerfile: dockerfiles/postgrest.Dockerfile
+  reticulum:
+    container_name: reticulum
+    build:
+      context: ./services/reticulum
+      dockerfile: TurkeyDockerfile
+      target: dev
+    environment:
+      DB_CREDENTIALS: postgres
+      DB_HOST: db
+      DIALOG_HOSTNAME: "hubs.chemie-lernen.org"
+      DIALOG_PORT: 4443
+      HUBS_ADMIN_INTERNAL_HOSTNAME: "hubs.chemie-lernen.org"
+      HUBS_CLIENT_INTERNAL_HOSTNAME: "hubs.chemie-lernen.org"
+      POSTGREST_INTERNAL_HOSTNAME: postgrest
+      SPOKE_INTERNAL_HOSTNAME: "hubs.chemie-lernen.org"
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    volumes:
+      - ./services/reticulum:/code
+      - letsencrypt:/code/certs
+      - retstorage:/code/storage/dev
+  spoke:
+    build:
+      context: .
+      dockerfile: dockerfiles/spoke.Dockerfile
+    environment:
+      CORS_PROXY_SERVER: "hubs-proxy.chemie-lernen.org"
+      INTERNAL_HOSTNAME: spoke
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./services/spoke:/code
+
+networks:
+  mozilla-hubs:
+
+volumes:
+  dialog:
+  hubs:
+  letsencrypt:
+  pgdata:
+  reticulum:
+  retstorage:
+  spoke:

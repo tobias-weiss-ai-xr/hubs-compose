@@ -1,19 +1,19 @@
 #!/bin/bash
-hash docker compose || exit 1
+hash mutagen-compose || exit 1
 hash watch || exit 1
 
 basedir=$(readlink -f "$(dirname "$0")"/..)
 session='hubs-compose'
 window=0
 
-if [ $TERM_PROGRAM = tmux ]; then
+if [ "$TERM_PROGRAM" = "tmux" ]; then
   tmux rename-session $session
 else
   tmux new-session -d -s $session
 fi
 
 tmux rename-window -t $session:$window observer
-tmux send-keys -t $session:$window "watch docker compose -f \'$basedir/docker-compose.yml\' ps --all" C-m
+tmux send-keys -t $session:$window "watch mutagen-compose -f \'$basedir/docker-compose.hubs.yml\' ps --all" C-m
 tmux split-window -t $session:$window
-tmux send-keys -t $session:$window "docker compose -f '$basedir/docker-compose.yml' logs --follow --timestamps" C-m
-tmux attach-session -t $session
+tmux send-keys -t $session:$window "mutagen-compose -f '$basedir/docker-compose.hubs.yml' logs --follow --timestamps" C-m
+tmux attach-session -t $session:$window

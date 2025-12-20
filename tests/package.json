@@ -1,0 +1,18 @@
+{
+  "name": "hubs-compose-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for Hubs Compose services",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.39.0"
+  }
+}

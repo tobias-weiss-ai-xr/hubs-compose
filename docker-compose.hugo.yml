@@ -1,0 +1,28 @@
+services:
+  hugo-chemie-lernen-org:
+    build: ./hugo-chemie-lernen-org
+    container_name: hugo-chemie-lernen-org
+    command: hugo server --bind 0.0.0.0 --baseURL http://hugo-chemie-lernen-org --appendPort=false
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
+      - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
+  hugo-graphwiz-ai:
+    build: ./hugo-graphwiz-ai
+    container_name: hugo-graphwiz-ai
+    command: hugo server --bind 0.0.0.0 --appendPort=false
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
+      - ./hugo-graphwiz-ai/public:/app/myhugoapp/public
+  hugo-tobias-weiss-org:
+    build: ./hugo-tobias-weiss-org
+    container_name: hugo-tobias-weiss-org
+    command: hugo server --bind 0.0.0.0 --appendPort=false
+    working_dir: /app/myhugoapp
+    volumes:
+      - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
+      - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
+
+networks:
+  hugo-sites:
