@@ -2,8 +2,8 @@
 categories = ["strategy", "technology"]
 date = "2025-12-18T00:00:00+01:00"
 draft = false
-slug = "digital-sovereignty-for-business"
-tags = ["digital-sovereignty", "open-source", "business-strategy", "data-control", "compliance"]
+slug = "digital-sovereignty"
+tags = ["digital-sovereignty", "privacy", "security", "data-protection", "open-standards"]
 title = "Digital Sovereignty: Securing Your Business Future"
 comments = false
 showcomments = false

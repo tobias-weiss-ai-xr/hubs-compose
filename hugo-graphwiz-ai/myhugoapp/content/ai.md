@@ -2,7 +2,7 @@
 categories = ["ai", "business-strategy"]
 date = "2022-01-01T00:00:00-01:00"
 draft = false
-slug = "ai-for-business-growth"
+slug = "ai"
 tags = ["ai", "machine-learning", "business-intelligence", "automation", "digital-transformation"]
 title = "AI for Business Growth: Driving Revenue with Intelligent Automation"
 comments = false

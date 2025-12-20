@@ -2,8 +2,8 @@
 categories = ["strategy", "security", "devops"]
 date = "2025-12-19T00:00:00-01:00"
 draft = false
-slug = "security-first-approach"
-tags = ["devsecops", "cybersecurity", "resilience", "compliance", "trust"]
+slug = "security"
+tags = ["security", "cybersecurity", "compliance", "business-continuity", "threat-mitigation"]
 title = "Security-First Approach: Integrated DevSecOps"
 comments = false
 showcomments = false

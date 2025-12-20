@@ -2,8 +2,8 @@
 categories = ["events", "community"]
 date = "2025-12-19T00:00:00-01:00"
 draft = false
-slug = "participated-in-cocreate-workshop"
-tags = ["open-science", "collaboration", "research-community", "digital-sovereignty"]
+slug = "workshops"
+tags = ["workshops", "innovation", "collaboration", "digital-strategy", "future-readiness"]
 title = "GraphWiz at CoCreate: Advancing Open Science and Collaboration"
 comments = false
 showcomments = false
