@@ -1,6 +1,6 @@
 ## Basic Configuration
 
-baseURL = "https://next.tobias-weiss.org/"
+baseURL = "https://tobias-weiss.org/"
 builddrafts = false
 canonifyurls = false
 languageCode = "en-US"
@@ -43,6 +43,7 @@ keywords = "ai,it,guitar,biking,jogging,hugo,xr,ar,vr"
 github = "tobias-weiss-ai-xr"
 email = "spam@tobias-weiss.org"
 linkedin = "in/tobias-weiss-ai-xr"
+instagram = "tobias_weiss_ai_xr"
 
 ## Extras
 [params.extra]

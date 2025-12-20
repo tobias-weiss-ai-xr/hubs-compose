@@ -10,7 +10,7 @@ services:
   hugo-graphwiz-ai:
     build: ./hugo-graphwiz-ai
     container_name: hugo-graphwiz-ai
-    command: hugo server --bind 0.0.0.0 --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
@@ -18,7 +18,7 @@ services:
   hugo-tobias-weiss-org:
     build: ./hugo-tobias-weiss-org
     container_name: hugo-tobias-weiss-org
-    command: hugo server --bind 0.0.0.0 --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://tobias-weiss.org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
