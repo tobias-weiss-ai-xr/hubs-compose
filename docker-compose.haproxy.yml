@@ -2,10 +2,8 @@ services:
     haproxy:
         container_name: haproxy
         environment:
-            - CERT1=tobias-weiss.org,www.tobias-weiss.org,hubs.tobias-weiss.org,wiki.tobias-weiss.org
-            - CERT2=graphwiz.ai,www.graphwiz.ai
-            - CERT3=graphwiz.de,www.graphwiz.de
-            - CERT4=chemie-lernen.org,www.chemie-lernen.org,hubs.chemie-lernen.org,wiki.chemie-lernen.org
+            - CERT1=hubs.tobias-weiss.org,wiki.tobias-weiss.org
+            - CERT2=hubs.chemie-lernen.org,wiki.chemie-lernen.org
             - EMAIL=spam@tobias-weiss.org
             - STAGING=false
         volumes:
@@ -26,7 +24,6 @@ services:
             - "514:514"
         image: "rsyslog/syslog_appliance_alpine"
 networks:
-    hugo-sites:
     xwiki-network:
     mailcow-network:
     mozilla-hubs:

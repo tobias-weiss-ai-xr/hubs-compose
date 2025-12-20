@@ -15,6 +15,5 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     IP_ADDR=$(ifconfig -l | xargs -n1 ipconfig getifaddr)
 fi
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.haproxy.yml up --detach
-PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.hugo.yml up --detach
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.xwiki.yml up --detach
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.hubs.yml up --detach

@@ -1,4 +1,4 @@
 /services/
 /haproxy/letsencrypt/
-hugo-tobias-weiss-org/data/ai_agent_video.mp4
+# hubs-compose/.gitignore
 *.mp4

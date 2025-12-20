@@ -314,7 +314,7 @@ def test_haproxy_backend_health(validator):
     logs = validator.get_service_logs('haproxy')
     
     # Check for successful backend registration
-    required_backends = ['hugo-tobias-weiss-org', 'hugo-graphwiz-ai', 'hugo-chemie-lernen-org']
+    required_backends = ['hubs-client', 'xwiki-web']
     
     missing_backends = []
     for backend in required_backends:
@@ -326,34 +326,6 @@ def test_haproxy_backend_health(validator):
     
     if missing_backends:
         pytest.fail(f"HAProxy backends not healthy: {', '.join(missing_backends)}")
-
-
-def test_hugo_sites_building(validator):
-    """Test that Hugo sites are building successfully."""
-    hugo_services = [
-        'hugo-tobias-weiss-org',
-        'hugo-graphwiz-ai',
-        'hugo-chemie-lernen-org'
-    ]
-    
-    failed_builds = []
-    for service in hugo_services:
-        try:
-            logs = validator.get_service_logs(service)
-        except:
-            pytest.skip(f"{service} logs unavailable")
-            continue
-        
-        # Check for successful build
-        if 'error' in logs.lower() and 'pages' not in logs.lower():
-            failed_builds.append(service)
-        
-        # Check for unmarshal/YAML errors
-        if 'unmarshal failed' in logs or 'bare keys cannot contain' in logs:
-            failed_builds.append(f"{service} (YAML/frontmatter error)")
-    
-    if failed_builds:
-        pytest.fail(f"Hugo sites failed to build: {', '.join(failed_builds)}")
 
 
 def test_tls_certificates_valid(validator):

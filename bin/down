@@ -7,5 +7,4 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.hubs.yml down
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.xwiki.yml down
-PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.hugo.yml down
 PRIVATE_NETWORK_IP=${IP_ADDR} mutagen-compose -f "$basedir"/docker-compose.haproxy.yml down

@@ -16,19 +16,6 @@ test.describe('Local Connectivity Checks', () => {
     expect(await response.text()).toContain('<title>App</title>');
   });
 
-  test('Hugo Tobias Weiss (localhost:1315) is reachable', async ({ request }) => {
-     // Checking the port based on docker-compose.hugo.yml, though docker ps showed 1313.
-     // If this fails, we know the mapping is missing.
-    try {
-        const response = await request.get('http://localhost:1315/');
-        expect(response.ok()).toBeTruthy();
-    } catch (e) {
-        console.log('Port 1315 not reachable, checking 1313?');
-        // This test might fail if port mapping is still missing
-        throw e;
-    }
-  });
-
   test('Reticulum (localhost:4000) is reachable', async ({ request }) => {
     const response = await request.get('https://localhost:4000/api/v1/meta', { ignoreHTTPSErrors: true });
     expect(response.ok()).toBeTruthy();

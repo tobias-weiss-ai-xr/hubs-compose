@@ -6,19 +6,6 @@ const HUBS_DOMAIN = `hubs.${DOMAIN}`;
 
 test.describe('Service Health Checks', () => {
 
-  test('Hugo via HAProxy is reachable and content matches', async ({ page }) => {
-    await page.goto(`https://${DOMAIN}/`);
-    await expect(page).toHaveTitle(/Chemie Lernen/);
-  });
-
-  test('Periodic Table Page is reachable and has expected content', async ({ page }) => {
-    await page.goto(`https://${DOMAIN}/periodic-table/`, { waitUntil: 'networkidle' });
-    await expect(page).toHaveTitle('Periodic Table');
-    // Check for a specific element on the periodic table page to ensure it rendered
-    await expect(page.locator('#info')).toContainText('three.js css3d - periodic table.');
-    await expect(page.locator('#container')).toBeVisible();
-  });
-
   // Expected to fail with 503 through HAProxy due to HTTP backend for mock
   test('Reticulum via HAProxy (expected 503)', async ({ request }) => {
     const response = await request.get(`https://${HUBS_DOMAIN}/`, { ignoreHTTPSErrors: true });

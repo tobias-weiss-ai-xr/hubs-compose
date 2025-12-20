@@ -15,6 +15,5 @@ echo "Stopping Hubs Compose..."
 /usr/bin/docker compose \
     -f docker-compose.haproxy.yml \
     -f docker-compose.hubs.yml \
-    -f docker-compose.hugo.yml \
     -f docker-compose.xwiki.yml \
     down --remove-orphans

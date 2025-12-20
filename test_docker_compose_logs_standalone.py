@@ -234,7 +234,7 @@ class DockerComposeLogsValidator:
             self.results['haproxy_backends']['skipped'] += 1
             return None
         
-        required_backends = ['hugo-tobias-weiss-org', 'hugo-graphwiz-ai', 'hugo-chemie-lernen-org']
+        required_backends = ['hubs-client', 'xwiki-web']
         missing_backends = []
         
         for backend in required_backends:
@@ -252,39 +252,6 @@ class DockerComposeLogsValidator:
         else:
             print("  ✓ PASSED")
             self.results['haproxy_backends']['passed'] += 1
-            return True
-    
-    def test_hugo_sites(self) -> bool:
-        """Test that Hugo sites are building successfully."""
-        print("\n[TEST] Hugo sites building...")
-        hugo_services = [
-            'hugo-tobias-weiss-org',
-            'hugo-graphwiz-ai',
-            'hugo-chemie-lernen-org'
-        ]
-        
-        failed_builds = []
-        for service in hugo_services:
-            try:
-                logs = self.get_service_logs(service)
-            except:
-                continue
-            
-            # Check for build errors
-            if 'unmarshal failed' in logs or 'bare keys cannot contain' in logs:
-                failed_builds.append(f"{service} (YAML/frontmatter error)")
-            elif 'error' in logs.lower() and 'pages' not in logs.lower():
-                failed_builds.append(service)
-        
-        if failed_builds:
-            print(f"  ✗ FAILED - Hugo sites with build issues:")
-            for site in failed_builds:
-                print(f"    - {site}")
-            self.results['hugo_build']['failed'] += 1
-            return False
-        else:
-            print("  ✓ PASSED")
-            self.results['hugo_build']['passed'] += 1
             return True
     
     def test_disk_space(self) -> bool:
@@ -336,7 +303,6 @@ class DockerComposeLogsValidator:
             self.test_database_initialization()
             self.test_no_services_crashing()
             self.test_haproxy_backends()
-            self.test_hugo_sites()
             self.test_disk_space()
             self.test_memory_issues()
         except Exception as e:
