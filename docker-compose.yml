@@ -81,24 +81,19 @@ services:
             - reticulum:/code
             - letsencrypt:/code/certs
             - retstorage:/code/storage/dev
-    hugo-base:
-        working_dir: /app/myhugoapp
     hugo-chemie-lernen-org:
-        extends: hugo-base
         build: ./hugo-chemie-lernen-org
         command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
         volumes:
             - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
             - ./hugo-chemie-lernen-org/public:/app/myhugoapp/public
     hugo-tobias-weiss-org:
-        extends: hugo-base
         build: ./hugo-tobias-weiss-org
         command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
         volumes:
             - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
             - ./hugo-tobias-weiss-org/public:/app/myhugoapp/public
     hugo-graphwiz-ai:
-        extends: hugo-base
         build: ./hugo-graphwiz-ai
         command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
         volumes:

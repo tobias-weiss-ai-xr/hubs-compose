@@ -1,7 +1,7 @@
 services:
   hugo-chemie-lernen-org:
     build: ./hugo-chemie-lernen-org
-    command: hugo server --bind 0.0.0.0 --baseURL https://chemie-lernen.org --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://hugo-chemie-lernen-org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-chemie-lernen-org/myhugoapp:/app/myhugoapp
@@ -10,7 +10,7 @@ services:
       - "1313:1313"
   hugo-graphwiz-ai:
     build: ./hugo-graphwiz-ai
-    command: hugo server --bind 0.0.0.0 --baseURL https://graphwiz.ai --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://hugo-graphwiz-ai --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-graphwiz-ai/myhugoapp:/app/myhugoapp
@@ -19,7 +19,7 @@ services:
       - "1314:1313"
   hugo-tobias-weiss-org:
     build: ./hugo-tobias-weiss-org
-    command: hugo server --bind 0.0.0.0 --baseURL https://next.tobias-weiss.org --appendPort=false
+    command: hugo server --bind 0.0.0.0 --baseURL https://hugo-tobias-weiss-org --appendPort=false
     working_dir: /app/myhugoapp
     volumes:
       - ./hugo-tobias-weiss-org/myhugoapp:/app/myhugoapp
