@@ -22,4 +22,7 @@ COPY capture.js ./
 # Create output directory
 RUN mkdir /output
 
+# Install curl for debugging
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 CMD ["npm", "start"]

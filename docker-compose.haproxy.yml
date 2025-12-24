@@ -2,8 +2,8 @@ services:
     haproxy:
         container_name: haproxy
         environment:
-            - CERT1=tobias-weiss.org,www.tobias-weiss.org,hubs.tobias-weiss.org,wiki.tobias-weiss.org,next.tobias-weiss.org
-            - CERT2=graphwiz.ai,www.graphwiz.ai,graphwiz.de,www.graphwiz.de,traefik.graphwiz.ai
+            - CERT1=tobias-weiss.org,www.tobias-weiss.org,wiki.tobias-weiss.org,next.tobias-weiss.org
+            - CERT2=graphwiz.ai,www.graphwiz.ai,graphwiz.de,www.graphwiz.de,traefik.graphwiz.ai,kg.graphwiz.ai
             - CERT3=chemie-lernen.org,www.chemie-lernen.org,hubs.chemie-lernen.org,wiki.chemie-lernen.org
             - EMAIL=spam@tobias-weiss.org
             - STAGING=false

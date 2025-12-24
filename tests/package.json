@@ -4,7 +4,13 @@
   "description": "Playwright tests for Hubs Compose services",
   "main": "index.js",
   "scripts": {
-    "test": "npx playwright test"
+    "test": "npx playwright test",
+    "test:visual": "npx playwright test tests/hubs_visual_regression.spec.js",
+    "test:screenshot": "npx playwright test tests/screenshot_service.spec.js",
+    "test:room": "npx playwright test tests/hubs_room.spec.js",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:report": "npx playwright show-report"
   },
   "keywords": [],
   "author": "",

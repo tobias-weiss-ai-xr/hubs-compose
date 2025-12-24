@@ -10,6 +10,8 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - mozilla-hubs
   dialog:
     build:
       context: .
@@ -47,6 +49,20 @@ services:
       - ./services/hubs:/code
       - ./services/hubs/certs:/code/certs
     working_dir: /code/admin
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hubs-admin.rule=Host(`hubs.chemie-lernen.org`) && PathPrefix(`/admin`)"
+      - "traefik.http.routers.hubs-admin.entrypoints=web"
+      - "traefik.http.routers.hubs-admin.middlewares=https-redirect@file"
+      - "traefik.http.routers.hubs-admin-secure.rule=Host(`hubs.chemie-lernen.org`) && PathPrefix(`/admin`)"
+      - "traefik.http.routers.hubs-admin-secure.entrypoints=websecure"
+      - "traefik.http.routers.hubs-admin-secure.tls=true"
+      - "traefik.http.routers.hubs-admin-secure.tls.certresolver=mytlschallenge"
+      - "traefik.http.routers.hubs-admin-secure.priority=100"
+      - "traefik.http.services.hubs-admin.loadbalancer.server.port=8989"
+    networks:
+      - mozilla-hubs
+      - web
   hubs-client:
     build:
       context: .
@@ -66,6 +82,21 @@ services:
       - ./services/hubs:/code
       - ./services/hubs/certs:/code/certs
     working_dir: /code
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hubs-client.rule=Host(`hubs.chemie-lernen.org`)"
+      - "traefik.http.routers.hubs-client.entrypoints=web"
+      - "traefik.http.routers.hubs-client.middlewares=https-redirect@file"
+      - "traefik.http.routers.hubs-client-secure.rule=Host(`hubs.chemie-lernen.org`)"
+      - "traefik.http.routers.hubs-client-secure.entrypoints=websecure"
+      - "traefik.http.routers.hubs-client-secure.tls=true"
+      - "traefik.http.routers.hubs-client-secure.tls.certresolver=mytlschallenge"
+      - "traefik.http.routers.hubs-client-secure.priority=10"
+      - "traefik.http.services.hubs-client.loadbalancer.server.port=8080"
+      - "traefik.http.services.hubs-client.loadbalancer.passHostHeader=false"
+    networks:
+      - mozilla-hubs
+      - web
   hubs-storybook:
     build:
       context: .
@@ -80,6 +111,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/postgrest.Dockerfile
+    networks:
+      - mozilla-hubs
   reticulum:
     container_name: reticulum
     build:
@@ -95,14 +128,26 @@ services:
       HUBS_CLIENT_INTERNAL_HOSTNAME: "hubs.chemie-lernen.org"
       POSTGREST_INTERNAL_HOSTNAME: postgrest
       SPOKE_INTERNAL_HOSTNAME: "hubs.chemie-lernen.org"
-    ports:
-      - "4000:4000"
     depends_on:
       - db
     volumes:
       - ./services/reticulum:/code
       - letsencrypt:/code/certs
       - retstorage:/code/storage/dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hubs-reticulum.rule=Host(`hubs.chemie-lernen.org`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.hubs-reticulum.entrypoints=web"
+      - "traefik.http.routers.hubs-reticulum.middlewares=https-redirect@file"
+      - "traefik.http.routers.hubs-reticulum-secure.rule=Host(`hubs.chemie-lernen.org`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.hubs-reticulum-secure.entrypoints=websecure"
+      - "traefik.http.routers.hubs-reticulum-secure.tls=true"
+      - "traefik.http.routers.hubs-reticulum-secure.tls.certresolver=mytlschallenge"
+      - "traefik.http.routers.hubs-reticulum-secure.priority=50"
+      - "traefik.http.services.hubs-reticulum.loadbalancer.server.port=4000"
+    networks:
+      - mozilla-hubs
+      - web
   spoke:
     build:
       context: .
@@ -115,8 +160,25 @@ services:
     volumes:
       - ./services/spoke:/code
 
+#   screenshot-service:
+#     build:
+#       context: ./screenshot-service
+#       dockerfile: Dockerfile
+#     environment:
+#       TARGET_URL: "http://localhost:4000"
+#       OUTPUT_FILE: "/output/screenshot.png"
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#       - screenshot-output:/output
+    depends_on:
+      - reticulum
+
 networks:
   mozilla-hubs:
+  web:
+    external: true
+    name: hugo-sites_web
 
 volumes:
   dialog:
@@ -126,3 +188,4 @@ volumes:
   reticulum:
   retstorage:
   spoke:
+  screenshot-output:
