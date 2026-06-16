@@ -1,0 +1,399 @@
+{
+  "plan": {
+    "id": "hubs-vred-sprint-1",
+    "title": "VREd Sprint 1: Chemistry VR Platform Integration",
+    "source": "Metis Pre-Planning Analysis",
+    "metis_session": "ses_13a4cfb66ffeZEvYbAhng3uW4R",
+    "created": "2026-06-16",
+    "status": "approved",
+    "overview": "Integrate the PSE-in-VR (Babylon.js) chemistry education app into the Mozilla Hubs VR platform. Build the bridge between two codebases through Spoke scene tools, Reticulum room types, and CORS-secured iframe embedding.",
+    "strategic_context": {
+      "opportunity_1": {
+        "title": "PSE-in-VR ↔ Hubs Integration Bridge",
+        "value": "The single highest-value move. PSE-in-VR has 118 element rooms, 12 themes, 10 experimental rooms in Babylon.js. Hubs has social VR infrastructure. The integration creates a chemistry classroom where students explore elements socially. This is unique — no competitor has a live chemistry VR deployment.",
+        "effort": "Weeks (3-6 weeks)",
+        "risk": "Medium. CORS, iframe communication, auth flow complexity."
+      },
+      "opportunity_2": {
+        "title": "CI/CD & Production Hardening",
+        "value": "Currently deploys from a dev docker-compose with mutagen sync. Moving to CI/CD with Forgejo runner gives deployment confidence, rollback capability, and enables the team to move fast without fear.",
+        "effort": "Weeks (2-3 weeks)",
+        "risk": "Low. Mostly config work. Highest ROI per hour spent."
+      },
+      "opportunity_3": {
+        "title": "Authorization & Room Access Control",
+        "value": "Chemistry education needs per-classroom access control. Currently Hubs rooms are link-share. Adding JWT-based room auth via Reticulum + Dialog enables teacher-controlled classrooms.",
+        "effort": "Months (2-3 months)",
+        "risk": "High. Elixir deep-dive, security auditing, breakage risk."
+      }
+    },
+    "recommendation": "Priority 1: Integration Bridge (opportunity 1). Priority 2: CI/CD (opportunity 2). Priority 3: Auth (opportunity 3 — defer to next sprint). Rationale: Integration delivers immediate differentiated value. CI/CD enables safe iteration. Auth is high-value but high-risk and should follow after infra is solid.",
+    "architecture_decisions": [
+      "AD-001: Use iframe media-frame embedding (not custom Hubs client fork) for PSE integration. Prevents divergence from upstream Hubs.",
+      "AD-002: Use Reticulum URL params for room-to-element mapping. Element symbol passed as ?element=Na in iframe src.",
+      "AD-003: CORS proxy in Reticulum (not a separate service) to minimize operational surface.",
+      "AD-004: Auth integration via Dialog JWT (Hubs' existing WebRTC auth flow), not custom Elixir auth module."
+    ],
+    "risks_and_mitigations": [
+      {
+        "risk": "Babylon.js content rendered inside Hubs 3D space has different interaction model",
+        "mitigation": "Media frame approach keeps PSE as independent app. Users 'enter' PSE via link/embed, not inline."
+      },
+      {
+        "risk": "CORS restrictions prevent cross-origin iframe communication",
+        "mitigation": "Reticulum CORS proxy route + PostgREST API for element data. No direct cross-origin JS needed."
+      },
+      {
+        "risk": "Upstream Hubs changes could conflict with customizations",
+        "mitigation": "AD-001: iframe embedding requires zero Hubs client modifications. Room type is a Reticulum data change only."
+      },
+      {
+        "risk": "Dialog certs managed in docker-compose.yml outside Reticulum config",
+        "mitigation": "Consolidate cert paths into Reticulum config.exs. Single source of truth for all service auth."
+      }
+    ],
+    "codons": [
+      {
+        "id": "codon-01",
+        "title": "Spoke: Measurement Tool (Position/Rotation/Scale Panel)",
+        "repository": "hubs-compose (services/spoke)",
+        "description": "Build a measurement tool in Spoke that shows position, rotation, and scale of selected 3D objects in a floating panel. This is the minimal verifiable piece that proves Spoke extensibility and gives educators precise scene control.",
+        "tech_stack": ["React", "Redux", "Three.js", "Spoke internals"],
+        "files_touched": ["services/spoke/src/ui/", "services/spoke/src/editor/"],
+        "commit_message": "feat(spoke): add measurement tool showing position, rotation, scale of selected objects",
+        "tdd_steps": [
+          "1. Write test: mount component, verify it renders without selection",
+          "2. Write test: select an object, verify panel shows numeric values",
+          "3. Write test: deselect, verify panel shows 'no selection' state",
+          "4. Write test: verify values update when object is moved via transform controls"
+        ],
+        "acceptance_criteria": [
+          "AC1: Spoke loads with 📐 toggle button in toolbar",
+          "AC2: Clicking 📐 toggles measurement panel visibility",
+          "AC3: Selecting a 3D object shows: Position (x, y, z), Rotation (x, y, z in degrees), Scale (x, y, z)",
+          "AC4: Deselecting shows 'No object selected'",
+          "AC5: Values update in real-time when object is manipulated"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "spoke-measurement-basic",
+            "tool": "playwright",
+            "steps": [
+              "1. Navigate to http://localhost:9091/projects",
+              "2. Create new project",
+              "3. Add a box primitive",
+              "4. Click 📐 button in toolbar",
+              "5. Assert: measurement panel is visible",
+              "6. Click the box to select it",
+              "7. Assert: panel shows Position, Rotation, Scale with numeric values",
+              "8. Click empty area to deselect",
+              "9. Assert: panel shows 'No object selected'"
+            ]
+          }
+        ],
+        "estimated_effort": "2-3 days",
+        "dependencies": [],
+        "rollback": "git revert HEAD"
+      },
+      {
+        "id": "codon-02",
+        "title": "Reticulum: Dialog Certs Consolidation",
+        "repository": "hubs-compose",
+        "description": "Move Dialog certificate paths from docker-compose.yml environment variables into Reticulum's config.exs. This consolidates all auth-related configuration into the Elixir config where it belongs.",
+        "tech_stack": ["Elixir", "Docker", "docker-compose"],
+        "files_touched": ["docker-compose.yml", "services/reticulum/config/config.exs", "docker-compose.override.yml"],
+        "commit_message": "chore(reticulum): consolidate Dialog certificate config into reticulum config.exs",
+        "tdd_steps": [
+          "1. Verify: docker-compose config -q passes after changes",
+          "2. Verify: reticulum DNS resolution for dialog container",
+          "3. Verify: dialog healthcheck passes with new cert paths"
+        ],
+        "acceptance_criteria": [
+          "AC1: docker-compose.yml no longer has DIALOG_CERT_* env vars in dialog service",
+          "AC2: reticulum config.exs has dialog_cert_path and dialog_key_path",
+          "AC3: All services restart cleanly",
+          "AC4: Dialog WebRTC connections still work"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "certs-consolidation",
+            "tool": "bash",
+            "steps": [
+              "1. docker-compose config -q",
+              "2. Assert: exit code 0",
+              "3. docker-compose up -d dialog reticulum",
+              "4. sleep 30",
+              "5. curl -fk https://localhost:4443/health",
+              "6. Assert: HTTP 200",
+              "7. curl -fk https://localhost:4001/healthz",
+              "8. Assert: HTTP 200"
+            ]
+          }
+        ],
+        "estimated_effort": "1-2 days",
+        "dependencies": [],
+        "rollback": "git revert HEAD"
+      },
+      {
+        "id": "codon-03",
+        "title": "Reticulum: PSE VR Room Type + CORS Proxy",
+        "repository": "hubs-compose (services/reticulum)",
+        "description": "Add a PSE_VR room type to Reticulum's room model. When a user creates a PSE VR room in Hubs, the scene loads an iframe/media-frame pointing to pse.chemie-lernen.org with element symbol as URL parameter.",
+        "tech_stack": ["Elixir (Phoenix)", "PostgreSQL", "Ecto", "CORS"],
+        "files_touched": [
+          "services/reticulum/lib/ret/room.ex",
+          "services/reticulum/lib/ret_web/controllers/api/v1/room_controller.ex",
+          "services/reticulum/config/config.exs",
+          "services/reticulum/lib/ret_web/plugs/cors_proxy.ex"
+        ],
+        "commit_message": "feat(reticulum): add PSE VR room type with CORS proxy for pse.chemie-lernen.org",
+        "tdd_steps": [
+          "1. Write Ecto migration: add room_type enum with 'pse_vr'",
+          "2. Write test: create room of type pse_vr via API",
+          "3. Write test: GET /api/v1/rooms/:id returns pse_vr room data",
+          "4. Write test: CORS proxy route returns proper Access-Control-Allow-Origin headers",
+          "5. Write test: CORS proxy blocks unauthorized origins"
+        ],
+        "acceptance_criteria": [
+          "AC1: POST /api/v1/rooms with type='pse_vr' succeeds",
+          "AC2: GET /api/v1/rooms/:id for pse_vr room returns pse_url with element param",
+          "AC3: CORS proxy endpoint returns 200 with proper CORS headers for pse.chemie-lernen.org",
+          "AC4: CORS proxy returns 403 for unauthorized origins",
+          "AC5: Creating PSE VR room from Hubs client shows iframe in media frame"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "pse-room-creation",
+            "tool": "curl",
+            "steps": [
+              "1. Note: Must run against running reticulum",
+              "2. POST http://localhost:4001/api/v1/rooms -H 'Content-Type: application/json' -d '{\"room\":{\"name\":\"Test PSE Room\",\"type\":\"pse_vr\",\"scene_id\":null,\"element\":\"Na\"}}'",
+              "3. Assert: HTTP 201, response has room.id",
+              "4. GET http://localhost:4001/api/v1/rooms/:id",
+              "5. Assert: response.room.type == 'pse_vr'",
+              "6. Assert: response.room.pse_url contains '?element=Na'"
+            ]
+          },
+          {
+            "scenario": "cors-proxy",
+            "tool": "curl",
+            "steps": [
+              "1. curl -H 'Origin: https://pse.chemie-lernen.org' -I http://localhost:4001/api/v1/pse-proxy",
+              "2. Assert: Access-Control-Allow-Origin header present",
+              "3. curl -H 'Origin: https://evil-site.com' -I http://localhost:4001/api/v1/pse-proxy",
+              "4. Assert: HTTP 403 or no CORS headers"
+            ]
+          }
+        ],
+        "estimated_effort": "1-2 weeks",
+        "dependencies": ["codon-02"],
+        "rollback": "git revert HEAD; mix ecto.migrate:down"
+      },
+      {
+        "id": "codon-04",
+        "title": "PSE-in-VR: Embed Mode + Element Room Linking",
+        "repository": "hello-webxr (pse-in-vr branch)",
+        "description": "Add an 'embed' mode to the Babylon.js app that accepts element symbol via URL parameter (?element=Na) and navigates directly to that element room. This makes the PSE app embeddable in Hubs rooms.",
+        "tech_stack": ["Babylon.js", "TypeScript", "Vite"],
+        "files_touched": [
+          "src/index.ts",
+          "src/embed/mount.ts",
+          "src/rooms/RoomManager.ts",
+          "src/types/index.ts"
+        ],
+        "commit_message": "feat(pse-vr): add embed mode with element room URL param navigation",
+        "tdd_steps": [
+          "1. Write test: mount() with startRoom='embed' + element='Na' navigates to Natrium room",
+          "2. Write test: mount() with invalid element symbol falls back to Lobby",
+          "3. Write test: embed mode hides non-essential UI elements (navigation hints, fullscreen button)",
+          "4. Write test: CORS headers present on iframe communication"
+        ],
+        "acceptance_criteria": [
+          "AC1: Visiting https://pse.chemie-lernen.org?element=Na loads Natrium room directly",
+          "AC2: Visiting https://pse.chemie-lernen.org without params loads Lobby",
+          "AC3: Embed mode hides navigation UI elements",
+          "AC4: Parent frame can postMessage to communicate room transitions"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "pse-embed-mode",
+            "tool": "playwright",
+            "steps": [
+              "1. Navigate to http://localhost:5173?element=H",
+              "2. Assert: Wasserstoff room loads with H title visible",
+              "3. Assert: no navigation hints visible (embed mode)",
+              "4. Navigate to http://localhost:5173",
+              "5. Assert: Lobby loads"
+            ]
+          }
+        ],
+        "estimated_effort": "1 week",
+        "dependencies": [],
+        "rollback": "git revert HEAD"
+      },
+      {
+        "id": "codon-05",
+        "title": "Deploy: PSE-in-VR Docker Deployment via Traefik",
+        "repository": "hello-webxr / ansible",
+        "description": "Ensure PSE-in-VR has production Docker deployment running under pse.chemie-lernen.org via the existing Traefik reverse proxy (network: traefik-public). The docker-compose.yml already exists with proper Traefik labels.",
+        "tech_stack": ["Docker", "Traefik", "nginx"],
+        "files_touched": [
+          "docker-compose.yml (hello-webxr)",
+          "Dockerfile",
+          "nginx.conf"
+        ],
+        "commit_message": "deploy(pse-vr): production deployment with Traefik reverse proxy",
+        "tdd_steps": [
+          "1. docker-compose build --verify",
+          "2. docker-compose up -d --verify port availability",
+          "3. curl https://pse.chemie-lernen.org/ --verify SSL termination",
+          "4. curl https://pse.chemie-lernen.org?element=Na --verify element routing"
+        ],
+        "acceptance_criteria": [
+          "AC1: docker-compose up -d succeeds with no port conflicts",
+          "AC2: https://pse.chemie-lernen.org loads PSE VR app with valid SSL",
+          "AC3: https://pse.chemie-lernen.org?element=Na loads Natrium room",
+          "AC4: Traefik dashboard shows pse.chemie-lernen.org router"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "pse-deployment",
+            "tool": "bash + curl",
+            "steps": [
+              "1. cd /home/weiss/git/hello-webxr && docker-compose up -d --build",
+              "2. sleep 10",
+              "3. curl -sI https://pse.chemie-lernen.org | head -5",
+              "4. Assert: HTTP/2 200",
+              "5. curl -sI https://pse.chemie-lernen.org?element=Fe | head -5",
+              "6. Assert: HTTP/2 200, content-type text/html",
+              "7. docker-compose ps",
+              "8. Assert: hello-webxr container running (Up status)"
+            ]
+          }
+        ],
+        "estimated_effort": "2-3 days",
+        "dependencies": ["codon-04"],
+        "rollback": "docker-compose down; git revert HEAD"
+      },
+      {
+        "id": "codon-06",
+        "title": "CI/CD: Full Pipeline for Hubs-Compose",
+        "repository": "hubs-compose",
+        "description": "Build a complete CI pipeline on the Forgejo runner that validates docker-compose syntax, builds all service images, runs Reticulum Elixir tests, and supports deployment. Add commit message validation.",
+        "tech_stack": ["Forgejo Actions", "Docker", "Elixir", "Node.js"],
+        "files_touched": [
+          ".forgejo/workflows/ci.yml",
+          ".forgejo/workflows/deploy.yml",
+          "commitlint.config.js"
+        ],
+        "commit_message": "ci(hubs-compose): add full CI pipeline with build, test, lint stages",
+        "tdd_steps": [
+          "1. Push CI config to Codeberg branch",
+          "2. Assert: CI pipeline triggers and validates docker-compose syntax",
+          "3. Assert: CI runs Reticulum deps.get + compile + test",
+          "4. Assert: CI runs npm lint + build for hubs-client/spoke"
+        ],
+        "acceptance_criteria": [
+          "AC1: Forgejo Actions pipeline validates docker-compose syntax",
+          "AC2: Reticulum Elixir compilation passes",
+          "AC3: hubs-client lint + build passes",
+          "AC4: Spoke build passes",
+          "AC5: Pipeline completes under 15 minutes"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "ci-pipeline",
+            "tool": "forgejo-actions",
+            "steps": [
+              "1. Push main branch to codeberg",
+              "2. Monitor pipeline at https://codeberg.org/graphwiz-ai/hubs-compose/actions",
+              "3. Assert: All jobs pass (green)",
+              "4. Push with invalid docker-compose syntax",
+              "5. Assert: CI fails with clear error message"
+            ]
+          }
+        ],
+        "estimated_effort": "3-5 days",
+        "dependencies": [],
+        "rollback": "git revert HEAD"
+      },
+      {
+        "id": "codon-07",
+        "title": "Integration Test: PSE Room → Embed → Element",
+        "repository": "cross-repo (hubs-compose + hello-webxr)",
+        "description": "End-to-end integration test that: (1) creates a PSE VR room in Hubs, (2) visits the room, (3) verifies the iframe loads PSE with correct element. This validates the entire integration chain.",
+        "tech_stack": ["Playwright", "Docker-compose"],
+        "files_touched": [
+          "e2e/pse-integration.spec.ts",
+          "playwright.config.ts"
+        ],
+        "commit_message": "test(e2e): add PSE VR integration test covering room→embed→element flow",
+        "tdd_steps": [
+          "1. Write test: create PSE VR room via API",
+          "2. Write test: visit Hubs room URL",
+          "3. Write test: verify iframe loads PSE app with element",
+          "4. Write test: element room content matches expected element"
+        ],
+        "acceptance_criteria": [
+          "AC1: E2E test creates PSE VR room programmatically",
+          "AC2: Test navigates to Hubs room and finds iframe",
+          "AC3: Iframe src contains correct element URL parameter",
+          "AC4: Test passes in CI on every push"
+        ],
+        "qa_scenarios": [
+          {
+            "scenario": "full-integration",
+            "tool": "playwright",
+            "steps": [
+              "1. Run: npx playwright test e2e/pse-integration.spec.ts",
+              "2. Assert: Room created successfully (HTTP 201)",
+              "3. Assert: Page navigates to Hubs room URL",
+              "4. Assert: Iframe element found with src matching pattern",
+              "5. Assert: Iframe contains element-specific content"
+            ]
+          }
+        ],
+        "estimated_effort": "3-5 days",
+        "dependencies": ["codon-03", "codon-04", "codon-05"],
+        "rollback": "git revert HEAD"
+      }
+    ],
+    "sprint_boundaries": {
+      "in_scope": [
+        "PSE-in-VR ↔ Hubs integration (iframe embedding, CORS proxy, room type)",
+        "Spoke measurement tool (first Spoke extensibility feature)",
+        "Dialog cert consolidation",
+        "CI/CD pipeline for hubs-compose",
+        "E2E integration tests"
+      ],
+      "not_in_scope": [
+        "Custom Hubs client modifications (fork prevention)",
+        "Room access control / authorization",
+        "Custom avatars or chemistry-themed inventory",
+        "PostgREST API extensions",
+        "Mobile app or native VR (Quest standalone)",
+        "Multi-language support beyond existing German UI"
+      ]
+    },
+    "commit_strategy": {
+      "rules": [
+        "One commit per codon, always",
+        "Every commit must pass: docker-compose config -q + relevant service tests",
+        "Commit message format: type(scope): description",
+        "Types: feat, fix, chore, test, ci, refactor, docs, deploy",
+        "No mega-commits. If a codon is too big, split it into sub-codons.",
+        "Each commit must be independently revertible"
+      ],
+      "squash_policy": "No squashing during sprint. Squash only on merge to main."
+    },
+    "execution_order": [
+      {"codon": "codon-02", "reason": "Infrastructure prep — cert consolidation cleans up config before room type work"},
+      {"codon": "codon-01", "reason": "Quick win — Spoke measurement tool is independent and showcases extensibility"},
+      {"codon": "codon-06", "reason": "CI/CD — enables safe iteration for all subsequent work"},
+      {"codon": "codon-03", "reason": "Core integration — PSE room type + CORS proxy in Reticulum"},
+      {"codon": "codon-04", "reason": "PSE embed mode — makes Babylon.js app embeddable"},
+      {"codon": "codon-05", "reason": "Deployment — production-deploy both apps"},
+      {"codon": "codon-07", "reason": "Integration test — validate the entire chain end-to-end"}
+    ]
+  }
+}

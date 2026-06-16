@@ -1,0 +1,38 @@
+# Linux override for hubs-compose
+# Replaces Mutagen volume sync (macOS) with standard bind mounts
+# Fixes dialog cert paths for Linux (container paths, not host paths)
+
+version: "3.9"
+
+services:
+  dialog:
+    environment:
+      AUTH_KEY: /etc/perms.pub.pem
+      HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
+      HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
+    volumes:
+      - ./services/dialog:/code
+
+  hubs-admin:
+    volumes:
+      - ./services/hubs:/code
+
+  hubs-client:
+    volumes:
+      - ./services/hubs:/code
+
+  hubs-storybook:
+    volumes:
+      - ./services/hubs:/code
+
+  reticulum:
+    volumes:
+      - ./services/reticulum:/code
+      - ./services/reticulum/storage/dev:/code/storage/dev
+
+  spoke:
+    volumes:
+      - ./services/spoke:/code
+
+volumes:
+  pgdata:
