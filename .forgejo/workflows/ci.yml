@@ -7,16 +7,15 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    container:
-      image: docker:dind
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Validate docker-compose YAML
+        run: python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" docker-compose.yml
       - name: Install docker-compose
         run: |
-          apk add --no-cache curl
           curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
       - name: Validate docker-compose
-        run: docker compose config > /dev/null
+        run: docker-compose config > /dev/null
