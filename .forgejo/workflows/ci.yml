@@ -17,3 +17,5 @@ jobs:
           chmod +x /usr/local/bin/docker-compose
       - name: Validate docker-compose
         run: docker compose config --quiet
+        env:
+          DOCKER_HOST: tcp://docker-in-docker:2376
