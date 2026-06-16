@@ -16,9 +16,9 @@ services:
       context: .
       dockerfile: dockerfiles/dialog.Dockerfile
     environment:
-      AUTH_KEY: /etc/perms.pub.pem
-      HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
-      HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
+      AUTH_KEY: /home/weiss/git/hubs-compose/services/dialog/certs/perms.pub.pem
+      HTTPS_CERT_FULLCHAIN: /home/weiss/git/hubs-compose/services/dialog/certs/fullchain.pem
+      HTTPS_CERT_PRIVKEY: /home/weiss/git/hubs-compose/services/dialog/certs/privkey.pem
       INTERACTIVE: "false"
       MEDIASOUP_MIN_PORT: 40000
       MEDIASOUP_MAX_PORT: 40050
@@ -37,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    command: npm run local -- --allowed-hosts all
     environment:
       INTERNAL_HOSTNAME: hubs-admin
     healthcheck:
@@ -52,15 +52,16 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local
+    command: npm run local -- --allowed-hosts all
     environment:
+      HUBS_HOST: hubs.tobias-weiss.org
       INTERNAL_HOSTNAME: hubs-client
     healthcheck:
       start_period: 3m30s
       test: ["CMD", "curl", "-fk", "https://localhost:8080"]
     platform: linux/amd64
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - hubs:/code
     working_dir: /code
@@ -89,6 +90,7 @@ services:
     depends_on:
       - db
     environment:
+      HUBS_HOST: hubs.tobias-weiss.org
       DB_CREDENTIALS: postgres
       DB_HOST: db
       DIALOG_HOSTNAME: "hubs.local"
@@ -98,7 +100,11 @@ services:
       POSTGREST_INTERNAL_HOSTNAME: postgrest
       SPOKE_INTERNAL_HOSTNAME: spoke
     ports:
-      - "4000:4000"
+      - "4001:4000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "--no-verbose", "--tries=1", "--spider", "https://127.0.0.1:4000/stream-offline.png"]
+      start_period: 60s
+      interval: 30s
     volumes:
       - reticulum:/code
       - retstorage:/code/storage/dev
@@ -111,7 +117,7 @@ services:
       INTERNAL_HOSTNAME: spoke
     platform: linux/amd64
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - spoke:/code
 networks:
