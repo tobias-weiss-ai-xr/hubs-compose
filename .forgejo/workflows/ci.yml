@@ -12,7 +12,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Validate docker-compose YAML
-        run: python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" docker-compose.yml
+        run: pip install pyyaml -q && python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" docker-compose.yml
       - name: Install docker-compose
         run: |
           curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
