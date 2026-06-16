@@ -7,19 +7,16 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    container:
+      image: docker:dind
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Install Docker CLI and docker-compose
+      - name: Install docker-compose
         run: |
-          apt-get update -qq && apt-get install -y -qq docker.io
+          apk add --no-cache curl
           curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-          mkdir -p /root/.docker
       - name: Validate docker-compose
         run: docker compose config > /dev/null
-        env:
-          DOCKER_HOST: tcp://docker-in-docker:2375
-          DOCKER_TLS: "0"
-          DOCKER_CERT_PATH: ""
