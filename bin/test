@@ -1,0 +1,18 @@
+#!/bin/bash
+hash mutagen-compose || exit 1
+
+basedir=$(readlink -f "$(dirname "$0")"/..)
+prefix='\n\033[1;37m'
+suffix='\033[0m\n'
+
+servicesdir=$basedir/services
+
+composefile=$basedir/docker-compose.yml
+echo -e ${prefix}Initializing Reticulum$suffix &&
+sudo docker-compose -f "$composefile" build reticulum &&
+sudo mutagen daemon stop && sudo mutagen daemon start &&
+sudo mutagen-compose -f "$composefile" run --rm reticulum sh -c 'trapped-mix do deps.get, deps.compile, ecto.create' &&
+
+code=$?
+mutagen-compose down
+exit $code
