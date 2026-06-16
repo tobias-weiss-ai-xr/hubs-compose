@@ -16,8 +16,10 @@ jobs:
           apt-get update -qq && apt-get install -y -qq docker.io
           curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
+          mkdir -p /root/.docker
       - name: Validate docker-compose
         run: docker compose config > /dev/null
         env:
           DOCKER_HOST: tcp://docker-in-docker:2375
           DOCKER_TLS: "0"
+          DOCKER_CERT_PATH: ""
