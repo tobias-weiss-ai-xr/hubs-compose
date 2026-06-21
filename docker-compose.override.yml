@@ -6,6 +6,8 @@ version: "3.9"
 
 services:
   dialog:
+    # Cert paths defined in config.exs (see services/reticulum/config/dev.exs — config :ret, :dialog)
+    # These env vars pass the canonical paths to the separate Dialog process at runtime.
     environment:
       AUTH_KEY: /etc/perms.pub.pem
       HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
@@ -26,8 +28,11 @@ services:
       - ./services/hubs:/code
 
   reticulum:
+    environment:
+      PERMS_KEY_PATH: /certs/perms.pub.pem
     volumes:
       - ./services/reticulum:/code
+      - ./services/dialog/certs:/certs:ro
       - ./services/reticulum/storage/dev:/code/storage/dev
 
   spoke:
