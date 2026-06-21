@@ -16,9 +16,6 @@ services:
       context: .
       dockerfile: dockerfiles/dialog.Dockerfile
     environment:
-      AUTH_KEY: /home/weiss/git/hubs-compose/services/dialog/certs/perms.pub.pem
-      HTTPS_CERT_FULLCHAIN: /home/weiss/git/hubs-compose/services/dialog/certs/fullchain.pem
-      HTTPS_CERT_PRIVKEY: /home/weiss/git/hubs-compose/services/dialog/certs/privkey.pem
       INTERACTIVE: "false"
       MEDIASOUP_MIN_PORT: 40000
       MEDIASOUP_MAX_PORT: 40050
@@ -97,8 +94,14 @@ services:
       DIALOG_PORT: 4443
       HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
       HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
+      PERMS_KEY_PATH: /certs/perms.pub.pem
       POSTGREST_INTERNAL_HOSTNAME: postgrest
       SPOKE_INTERNAL_HOSTNAME: spoke
+      SMTP_SERVER: mail.tobias-weiss.org
+      SMTP_PORT: "587"
+      SMTP_USERNAME: hubs@tobias-weiss.org
+      SMTP_PASSWORD: HubsApp2026
+      EMAIL_FROM: hubs@tobias-weiss.org
     ports:
       - "4001:4000"
     healthcheck:
