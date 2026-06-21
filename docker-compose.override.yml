@@ -2,8 +2,6 @@
 # Replaces Mutagen volume sync (macOS) with standard bind mounts
 # Fixes dialog cert paths for Linux (container paths, not host paths)
 
-version: "3.9"
-
 services:
   dialog:
     # Cert paths defined in config.exs (see services/reticulum/config/dev.exs — config :ret, :dialog)
@@ -29,7 +27,7 @@ services:
 
   reticulum:
     environment:
-      PERMS_KEY_PATH: /certs/perms.pub.pem
+      PERMS_KEY_PATH: /certs/perms.priv.pem
     volumes:
       - ./services/reticulum:/code
       - ./services/dialog/certs:/certs:ro
