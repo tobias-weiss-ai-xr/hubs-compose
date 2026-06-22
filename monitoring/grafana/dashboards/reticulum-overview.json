@@ -1,0 +1,52 @@
+{
+  "title": "Reticulum Overview",
+  "uid": "reticulum-overview",
+  "version": 1,
+  "tags": ["reticulum", "phoenix"],
+  "schemaVersion": 27,
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "title": "Request Rate",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(phoenix_endpoint_stop_duration_count[1m])",
+          "legendFormat": "{{method}} {{request_path}}"
+        }
+      ]
+    },
+    {
+      "title": "Request Latency (p50)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "phoenix_endpoint_stop_duration_sum / phoenix_endpoint_stop_duration_count",
+          "legendFormat": "avg {{method}} {{request_path}}"
+        }
+      ]
+    },
+    {
+      "title": "Memory",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "vm_memory_total",
+          "legendFormat": "Memory (MB)"
+        }
+      ]
+    },
+    {
+      "title": "Run Queue Length",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "vm_total_run_queue_lengths_cpu", "legendFormat": "CPU" },
+        { "expr": "vm_total_run_queue_lengths_io", "legendFormat": "IO" }
+      ]
+    }
+  ]
+}
