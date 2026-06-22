@@ -18,6 +18,10 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/coturn.Dockerfile
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5349"]
+      start_period: 10s
+      interval: 30s
     volumes:
       - coturn:/var/lib/coturn
     ports:
