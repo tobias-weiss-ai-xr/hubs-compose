@@ -153,40 +153,34 @@ test.describe("Auth Integration", () => {
   });
 
   test.describe("Dialog auth integration", () => {
+    test("Dialog GET /rooms returns 401 without auth", async ({ request }) => {
+      const response = await request.get(`${DIALOG_API}/rooms`, {
+        ignoreHTTPSErrors: true,
+      });
+      expect(response.status()).toBe(401);
+      const body = await response.json();
+      expect(body.error).toBe("missing_authorization_header");
+    });
+
     test("Dialog POST /rooms returns 401 without auth", async ({ request }) => {
       const response = await request.post(`${DIALOG_API}/rooms`, {
         data: { roomId: "e2e-test-room", roomSize: 4 },
         ignoreHTTPSErrors: true,
       });
-      try {
-        expect([401, 403]).toContain(response.status());
-      } catch {
-        test.skip(true, "Dialog service returned unexpected status — may not be available");
-      }
+      expect(response.status()).toBe(401);
+      const body = await response.json();
+      expect(body.error).toBe("missing_authorization_header");
     });
 
-    test("Dialog POST /rooms returns 401 with invalid token", async ({ request }) => {
+    test("Dialog POST /rooms returns 403 with invalid token", async ({ request }) => {
       const response = await request.post(`${DIALOG_API}/rooms`, {
         data: { roomId: "e2e-test-room-2", roomSize: 4 },
         headers: { Authorization: "Bearer invalid.jwt.token" },
         ignoreHTTPSErrors: true,
       });
-      try {
-        expect([401, 403]).toContain(response.status());
-      } catch {
-        test.skip(true, "Dialog service not available");
-      }
-    });
-
-    test("Dialog GET /rooms returns 401 without auth", async ({ request }) => {
-      const response = await request.get(`${DIALOG_API}/rooms`, {
-        ignoreHTTPSErrors: true,
-      });
-      try {
-        expect([401, 403]).toContain(response.status());
-      } catch {
-        test.skip(true, "Dialog service not available");
-      }
+      expect(response.status()).toBe(403);
+      const body = await response.json();
+      expect(body.error).toBe("token_invalid");
     });
   });
 
