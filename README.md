@@ -1,105 +1,160 @@
-# Hubs Compose
+# Hubs Compose — Chemistry Education Platform
 
-Hubs Compose is a Docker Compose setup than can be used to orchestrate all the
-services used by Mozilla Hubs for local development.[^1]
+A Docker Compose setup orchestrating [Mozilla Hubs](https://github.com/mozilla/hubs-compose)
+services for an interactive **chemistry education VR platform**.
 
-[^1]: This is not a production-ready setup.  It does not account for
-security or scalability.  Additionally the permissions files were generated for
-development purposes only.
+## What This Fork Adds
 
-## Windows Prerequisites
-### Summary
-- (Optional) [Install WSL2](https://learn.microsoft.com/en-us/windows/wsl/install)
-- Ensure Git checks out Unix line endings
-- Use Git Bash to run scripts
+This fork extends Mozilla Hubs with chemistry education features:
 
-### (Optional) Install WSL2
-**Docker Desktop runs more quickly** when it can use its WSL2-based engine. Docker Desktop can only use its WSL2 engine if WSL2 is installed.
+- **Periodic table integration** — Rooms linked to chemical elements (118 elements
+  from H to Og), browsable via `GET /api/v1/hubs/element/:symbol`
+- **JWT room access tokens** — Signed `access_token` for student/teacher role-based
+  room entry via `POST /api/v1/rooms/token`
+- **Room access middleware** — `RoomAccessPlug` validates tokens on room entry,
+  enforcing expiry and role claims
+- **Spoke classroom dashboard** — Chemistry room browser at `/classroom` in Spoke
+- **Dialog auth middleware** — RS512 JWT verification for `GET`/`POST /rooms`
+- **Coturn TURN server** — WebRTC relay for restrictive networks (TLS 5349, ports
+  50000-50050 TCP+UDP)
+- **Rate limiting** — `PlugAttack` on room token and hub creation endpoints
+- **Prometheus + Grafana** — Metrics at `/metrics` (reticulum), dashboard at :3000
 
-There are also other benefits to installing WSL2, including being able to run scripts and programs that your Unix developer friends share with you.
+## Architecture
 
-To install WSL2, follow Microsoft's documentation here: [Install Linux on Windows with WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
+```
+┌─────────────────────────────────────────────────────┐
+│                     Docker Host                       │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────────┐  │
+│  │ Reticulum │  │  Dialog   │  │   Hubs Client     │  │
+│  │ :4001     │  │ :4443     │  │   :8081           │  │
+│  │ (Elixir   │  │ (Node.js  │  │   (React/A-Frame) │  │
+│  │  Phoenix) │  │  mediasoup│  └───────────────────┘  │
+│  └────┬──────┘  └──────────┘  ┌───────────────────┐  │
+│       │                       │   Hubs Admin      │  │
+│  ┌────▼──────┐                │   :8989           │  │
+│  │  PostgREST│  ┌──────────┐  └───────────────────┘  │
+│  │  :3000    │  │  Spoke   │  ┌───────────────────┐  │
+│  └───────────┘  │  :9091   │  │   Coturn (TURN)   │  │
+│                 └──────────┘  │   :5349            │  │
+│  ┌──────────┐  ┌──────────┐  └───────────────────┘  │
+│  │PostgreSQL│  │ Prom/Graf│  ┌───────────────────┐  │
+│  │ :5432    │  │ :9090/3k  │  │  PSE-VR (Hello    │  │
+│  └──────────┘  └──────────┘  │  WebXR) :9090     │  │
+│                              └───────────────────┘  │
+└─────────────────────────────────────────────────────┘
+```
 
-#### ⚠️ Potential Conflict
-If you plan to run Docker Desktop on Windows, _and_ you want to take advantage of Docker Desktop's faster WSL2 engine, _and_ you already have WSL2 installed, you need to first [uninstall any previous versions of Docker Engine and CLI installed directly through WSL2](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2).
+### Services
 
-You can [read more about Docker Desktop + WSL2 on Docker's website.](https://docs.docker.com/desktop/wsl/#turn-on-docker-desktop-wsl-2)
+| Service | Port | Tech | Description |
+|---|---|---|---|
+| **reticulum** | 4001 | Elixir/Phoenix | API server, auth, room management |
+| **dialog** | 4443 | Node.js/mediasoup | WebRTC media server (SFU) |
+| **hubs-client** | 8081 | React/A-Frame | 3D room client (main entry) |
+| **hubs-admin** | 8989 | React | Admin panel |
+| **spoke** | 9091 | React | Scene editor + classroom dashboard |
+| **postgrest** | — | PostgREST | RESTful Postgres API |
+| **db** | 5432 | PostgreSQL 14 | Primary database |
+| **coturn** | 5349 | coturn/alpine | TURN/STUN relay server |
+| **prometheus** | 9090 | Prometheus | Metrics collection |
+| **grafana** | 3000 | Grafana | Metrics dashboards |
+| **pse-vr** | 3000 | WebXR | Periodic table viewer |
 
-### Use Unix Line Endings
-Some scripts used to run `hubs-compose` rely on those scripts containing Unix line endings. If you're running `hubs-compose` on Windows, you may need to change your Git line endings setting to ensure your local files include Unix-style line endings.
+## Quick Start
 
-To change this setting, open a Git Bash shell, then **run `git config --global core.autocrlf false`** to ensure that the intended Unix-style line endings are preserved upon Git checkout.
+### Prerequisites
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Mutagen](https://mutagen.io/documentation/introduction/installation)
+- [Mutagen Compose](https://github.com/mutagen-io/mutagen-compose#system-requirements)
 
-If you've already cloned this `hubs-compose` repository locally, you may have to delete your local copy of the repository and re-clone it after changing your line endings setting.
+### Setup
 
-### Use Git Bash
-Some scripts used to run `hubs-compose` are meant to run in a Unix-like `bash` shell. The "Git Bash" shell included with Git - also known as MINGW64 - will work to run these scripts; the Windows Terminal will not work to run these scripts.
+1. **Hosts entries** — Add to `/etc/hosts`:
+   ```
+   127.0.0.1   hubs.local hubs-proxy.local
+   ```
 
-## Usage
+2. **Environment** — Copy and edit:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your secrets
+   ```
 
-Once the containers are up and running and you have accepted the self-signed
-certificates, you can visit https://hubs.local:4000 from your browser.
+3. **Start services**:
+   ```bash
+   docker compose up --build -d
+   ```
 
-### Initial Setup
+4. **Verify health**:
+   ```bash
+   docker ps
+   curl -sk https://hubs.local:4001/health
+   ```
 
-1. [Install Docker Compose](https://docs.docker.com/compose/install)
-2. [Install Mutagen](https://mutagen.io/documentation/introduction/installation)
-3. [Install Mutagen Compose](https://github.com/mutagen-io/mutagen-compose#system-requirements)
-  - Ensure that the version of Mutagen Compose you're installing matches the version of Mutagen that you installed. (If you install the latest versions at the same time, they will "match".)
-4. Add these entries to your hosts file:
+5. **Accept self-signed certs** in your browser:
+   - https://hubs.local:4001
+   - https://hubs.local:4443
+   - https://hubs.local:8081
+   - https://hubs.local:8989
+   - https://hubs.local:9091
 
-        127.0.0.1   hubs.local
-        127.0.0.1   hubs-proxy.local
+> **Note**: The first `hubs-client` startup takes ~3m30s for webpack build.
+> All other services start within ~30s.
 
-  - On Windows, your plain-text `hosts` file is probably located at `C:\Windows\System32\drivers\etc\hosts`.
-5. Initialize the services with `bin/init`
+### Auth Flow
 
-### Orchestration
+```
+┌──────────┐     POST /api/v1/rooms/token     ┌───────────┐
+│ Teacher   │ ──────────────────────────────►  │ Reticulum │
+│ (Hubs)    │     {room_id, role}              │           │
+└──────────┘                                   │ RS512 JWT │
+      │                                        │ 5-min TTL │
+      │     {access_token, room_id, role}      └─────┬─────┘
+      │ ◄─────────────────────────────────────────────┘
+      │
+      │     POST /api/v1/rooms/:room_id               │
+      │     Authorization: Bearer <token>              │
+      │ ──────────────────────────────────────────────►│
+      │                          RoomAccessPlug verifies│
+      │                           - signature           │
+      │                           - expiry              │
+      │                           - room_id match       │
+      │ ◄── 200 OK / 403 error ◄───────────────────────┘
+```
 
-* Start containers with `bin/up`
-  - `bin/up` starts the Mutagen daemon automatically. The Mutagen daemon will stay running until you stop it manually with `mutagen daemon stop`.
-* Stop containers `bin/down`
-* Observe running containers with `bin/observe`[^2]
-* Restore all services to a fresh state with `bin/reset`
-* Update all service source code with `bin/services-update`
-* Update service dependencies with `bin/init`
+## Testing
 
-[^2]: Requires `tmux` and `watch` program files in the user’s path
+```bash
+# Elixir tests (inside reticulum container)
+docker exec hubs-compose-reticulum-1 mix test
 
-### Self-Signed Certificates
+# E2E tests (host)
+cd e2e && npx playwright test --reporter=list
 
-Service communication is encrypted with self-signed Transport Layer Security
-(TLS) certificates.  You will need to accept the proxy certificate and the
-certificate at each of the Hubs ports mapped in
-[`docker-compose.yml`](docker-compose.yml).  At the time of this writing, that
-means visiting these links in your web browser and following the prompts:
+# Performance tests (if k6 installed)
+k6 run e2e/load-test.js
+```
 
-* [Proxy](https://hubs-proxy.local:4000)
-* [Dialog](https://hubs.local:4443)
-* [Spoke](https://hubs.local:9090)
-* [Hubs Admin](https://hubs.local:8989)
-* [Hubs Client](https://hubs.local:8080)
-* [Reticulum](https://hubs.local:4000)
+## Configuration
 
-### Admin panel access
+Key environment variables (see `.env.example`):
 
-To connect to the admin panel you will need to manually
-[promote an account to admin](https://github.com/mozilla/reticulum#6-creating-an-admin-user).
+| Variable | Default | Purpose |
+|---|---|---|
+| `HUBS_HOST` | hubs.tobias-weiss.org | Public hostname |
+| `DB_CREDENTIALS` | postgres | Postgres password |
+| `PERMS_KEY_PATH` | /etc/perms.pem | JWT signing key |
+| `SMTP_SERVER` | mail.tobias-weiss.org | Email server |
+| `MEDIASOUP_ANNOUNCED_IP` | hubs.local | WebRTC IP for clients |
+| `DIALOG_HOSTNAME` | hubs.local | Dialog service host |
+| `DIALOG_PORT` | 4443 | Dialog service port |
 
-### Command Execution
+## Upstream
 
-Common commands can be easily executed inside a running container from your
-shell using the scripts inside the given service’s `bin/` directory.  For
-example, calling `bin/mix deps.get` from `./services/reticulum/` will download
-the dependencies for Reticulum.
+This fork tracks [mozilla/hubs-compose](https://github.com/mozilla/hubs-compose).
+Custom branches integrated:
+- `webrtc-support` — Mediasoup ports for WebRTC
+- `coturn-support` — TURN relay server
 
-## Development
-
-### Architectural Decision Records
-
-[Records of architectural decisions](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
-are stored in the `decisions/` directory.  If you make a decision that affects
-“the structure, non-functional characteristics, dependencies, interfaces, or
-construction techniques” of the project, please document it.  If you
-[install ADR Tools](https://github.com/npryce/adr-tools#quick-start), `adr new`
-will generate the template for you.
+See `docs/architecture.md` for detailed component descriptions.
