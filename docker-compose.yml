@@ -8,14 +8,37 @@ services:
     user: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
+  coturn:
+    environment:
+      REALM: ret
+      PSQL: host=db dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30
+      TLS_PORT: 5349
+      MIN_PORT: 50000
+      MAX_PORT: 50050
+    build:
+      context: .
+      dockerfile: dockerfiles/coturn.Dockerfile
+    volumes:
+      - coturn:/var/lib/coturn
+    ports:
+      - "5349:5349"
+      - "50000-50050:50000-50050"
+      - "50000-50050:50000-50050/udp"
+    depends_on:
+      - db
   dialog:
     build:
       context: .
       dockerfile: dockerfiles/dialog.Dockerfile
     environment:
       INTERACTIVE: "false"
+      MEDIASOUP_MIN_PORT: 40000
+      MEDIASOUP_MAX_PORT: 40050
+      MEDIASOUP_ANNOUNCED_IP: ${MEDIASOUP_ANNOUNCED_IP:-hubs.local}
     ports:
       - "4443:4443"
+      - "40000-40050:40000-40050"
+      - "40000-40050:40000-40050/udp"
     volumes:
       - dialog:/code
     working_dir: /code
@@ -124,6 +147,7 @@ networks:
   default:
     name: mozilla-hubs
 volumes:
+  coturn:
   dialog:
   hubs:
   pgdata:
