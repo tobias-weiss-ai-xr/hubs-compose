@@ -1,3 +1,6 @@
 /services/
 /.sisyphus/
 erl_crash.dump
+/test-results/
+/e2e/test-results/
+/e2e/playwright-report/
