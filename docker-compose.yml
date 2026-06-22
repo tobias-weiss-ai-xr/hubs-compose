@@ -1,7 +1,7 @@
 services:
   db:
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${DB_CREDENTIALS:-postgres}
     healthcheck:
       test: ["CMD", "pg_isready"]
     image: "postgres:14-alpine"
@@ -50,7 +50,7 @@ services:
       dockerfile: dockerfiles/hubs.Dockerfile
     command: npm run local -- --allowed-hosts all
     environment:
-      HUBS_HOST: hubs.tobias-weiss.org
+      HUBS_HOST: ${HUBS_HOST:-hubs.tobias-weiss.org}
       INTERNAL_HOSTNAME: hubs-client
     healthcheck:
       start_period: 3m30s
@@ -86,21 +86,21 @@ services:
     depends_on:
       - db
     environment:
-      HUBS_HOST: hubs.tobias-weiss.org
-      DB_CREDENTIALS: postgres
+      HUBS_HOST: ${HUBS_HOST:-hubs.tobias-weiss.org}
+      DB_CREDENTIALS: ${DB_CREDENTIALS:-postgres}
       DB_HOST: db
-      DIALOG_HOSTNAME: "hubs.local"
-      DIALOG_PORT: 4443
-      HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
-      HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
-      PERMS_KEY_PATH: /certs/perms.priv.pem
-      POSTGREST_INTERNAL_HOSTNAME: postgrest
-      SPOKE_INTERNAL_HOSTNAME: spoke
-      SMTP_SERVER: mail.tobias-weiss.org
-      SMTP_PORT: "587"
-      SMTP_USERNAME: hubs@tobias-weiss.org
-      SMTP_PASSWORD: HubsApp2026
-      EMAIL_FROM: hubs@tobias-weiss.org
+      DIALOG_HOSTNAME: ${DIALOG_HOSTNAME:-hubs.local}
+      DIALOG_PORT: ${DIALOG_PORT:-4443}
+      HUBS_ADMIN_INTERNAL_HOSTNAME: ${HUBS_ADMIN_INTERNAL_HOSTNAME:-hubs-admin}
+      HUBS_CLIENT_INTERNAL_HOSTNAME: ${HUBS_CLIENT_INTERNAL_HOSTNAME:-hubs-client}
+      PERMS_KEY_PATH: ${PERMS_KEY_PATH:-/etc/perms.pem}
+      POSTGREST_INTERNAL_HOSTNAME: ${POSTGREST_INTERNAL_HOSTNAME:-postgrest}
+      SPOKE_INTERNAL_HOSTNAME: ${SPOKE_INTERNAL_HOSTNAME:-spoke}
+      SMTP_SERVER: ${SMTP_SERVER:-mail.tobias-weiss.org}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-hubs@tobias-weiss.org}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-HubsApp2026}
+      EMAIL_FROM: ${EMAIL_FROM:-hubs@tobias-weiss.org}
     ports:
       - "4001:4000"
     healthcheck:
