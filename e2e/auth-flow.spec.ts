@@ -184,6 +184,143 @@ test.describe("Auth Integration", () => {
     });
   });
 
+  test.describe("Classroom Flow", () => {
+    test("creates classroom hub and appears in element query", async ({ request }) => {
+      const symbol = "Cu";
+      const roomName = `E2E Classroom ${Date.now()}`;
+
+      const createResponse = await request.post(`${RETICULUM_API}/hubs`, {
+        data: {
+          hub: {
+            name: roomName,
+            user_data: { chemistry: { symbol } }
+          }
+        },
+        ignoreHTTPSErrors: true
+      });
+      expect(createResponse.status()).toBe(200);
+      const hub = await createResponse.json();
+      expect(hub.hub_id).toBeTruthy();
+
+      const queryResponse = await request.get(`${RETICULUM_API}/hubs/element/${symbol}`, {
+        ignoreHTTPSErrors: true
+      });
+      expect([200, 403]).toContain(queryResponse.status());
+
+      if (queryResponse.status() === 200) {
+        const body = await queryResponse.json();
+        expect(body.hubs).toBeDefined();
+        expect(Array.isArray(body.hubs)).toBe(true);
+        const matched = body.hubs.find((h: any) => h.hub_id === hub.hub_id);
+        expect(matched).toBeDefined();
+        expect(matched.name).toBe(roomName);
+      }
+    });
+
+    test("query by element returns correct chemistry metadata", async ({ request }) => {
+      await delay(RATE_LIMIT_DELAY_MS);
+
+      const symbol = "Fe";
+      const roomName = `E2E Iron Room ${Date.now()}`;
+
+      const createResponse = await request.post(`${RETICULUM_API}/hubs`, {
+        data: {
+          hub: {
+            name: roomName,
+            user_data: { chemistry: { symbol } }
+          }
+        },
+        ignoreHTTPSErrors: true
+      });
+      expect(createResponse.status()).toBe(200);
+      const hub = await createResponse.json();
+      expect(hub.hub_id).toBeTruthy();
+
+      const queryResponse = await request.get(`${RETICULUM_API}/hubs/element/${symbol}`, {
+        ignoreHTTPSErrors: true
+      });
+      expect([200, 403]).toContain(queryResponse.status());
+
+      if (queryResponse.status() === 200) {
+        const body = await queryResponse.json();
+        const matched = body.hubs.find((h: any) => h.hub_id === hub.hub_id);
+        expect(matched).toBeDefined();
+        expect(matched.user_data?.chemistry?.symbol).toBe(symbol);
+      }
+    });
+  });
+
+  test.describe("POST /api/v1/rooms/:room_id/join — room access required", () => {
+    test("returns 403 without room access token", async ({ request }) => {
+      const hub = await request.post(`${RETICULUM_API}/hubs`, {
+        data: { hub: { name: "E2E Join Test Hub" } },
+        ignoreHTTPSErrors: true,
+      });
+      expect(hub.status()).toBe(200);
+      const hubBody = await hub.json();
+      expect(hubBody.hub_id).toBeTruthy();
+
+      const joinRes = await request.post(
+        `${RETICULUM_API}/rooms/${hubBody.hub_id}/join`,
+        {
+          data: { room_id: hubBody.hub_id },
+          ignoreHTTPSErrors: true,
+        }
+      );
+      expect(joinRes.status()).toBe(403);
+      const joinBody = await joinRes.json();
+      expect(joinBody).toHaveProperty("error");
+    });
+
+    test("returns 403 with invalid room access token", async ({ request }) => {
+      await delay(RATE_LIMIT_DELAY_MS);
+
+      const hub = await request.post(`${RETICULUM_API}/hubs`, {
+        data: { hub: { name: "E2E Join Invalid Token" } },
+        ignoreHTTPSErrors: true,
+      });
+      expect(hub.status()).toBe(200);
+      const hubBody = await hub.json();
+
+      const joinRes = await request.post(
+        `${RETICULUM_API}/rooms/${hubBody.hub_id}/join`,
+        {
+          data: { room_id: hubBody.hub_id },
+          headers: { "x-room-access-token": "invalid-token-value" },
+          ignoreHTTPSErrors: true,
+        }
+      );
+      expect(joinRes.status()).toBe(403);
+    });
+  });
+
+  test.describe("Dialog hostname embed in hub page", () => {
+    test("hub page embed data uses correct dialog hostname", async ({ page, request }) => {
+      await delay(RATE_LIMIT_DELAY_MS);
+
+      const hub = await request.post(`${RETICULUM_API}/hubs`, {
+        data: { hub: { name: "E2E Dialog Hostname Test" } },
+        ignoreHTTPSErrors: true,
+      });
+      expect(hub.status()).toBe(200);
+      const hubBody = await hub.json();
+
+      const response = await page.goto(hubBody.url, {
+        waitUntil: "load",
+        timeout: 30000,
+      });
+      expect(response?.status()).toBe(200);
+
+      // Wait for APP data to be hydrated from inline <script> in hub.html
+      await page.waitForFunction(() => window.APP && window.APP.hub, { timeout: 10000 });
+      const hubEmbedData = await page.evaluate(() => window.APP.hub);
+      expect(hubEmbedData).not.toBeNull();
+      expect(hubEmbedData).toHaveProperty("host");
+      expect(hubEmbedData.host).not.toBe("hubs.local");
+      expect(hubEmbedData.host).toBe("hubs.tobias-weiss.org");
+    });
+  });
+
   test.describe("Frontend smoke tests", () => {
     test("Hubs frontend loads at port 9090", async ({ page }) => {
       // Hubs is a React SPA with persistent WebSocket connections.
