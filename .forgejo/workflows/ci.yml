@@ -29,6 +29,8 @@ jobs:
 
   reticulum-test:
     runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
     services:
       postgres:
         image: postgres:14-alpine
@@ -66,17 +68,14 @@ jobs:
           mix local.hex --force
           mix local.rebar --force
           mix deps.get
-      - name: Compile (test env)
+      - name: Compile
         working-directory: services/reticulum
-        env:
-          MIX_ENV: test
         run: mix compile
       - name: Run tests
         working-directory: services/reticulum
         env:
           DB_HOST: localhost
           DB_CREDENTIALS: postgres
-          MIX_ENV: test
         run: mix test
 
   dialog-lint:
