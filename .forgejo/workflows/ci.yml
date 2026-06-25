@@ -2,7 +2,17 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: "20"
@@ -12,8 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
       - name: Validate docker-compose syntax
         run: docker compose config -q
       - name: Validate docker-compose override syntax
@@ -42,14 +50,26 @@ jobs:
         with:
           elixir-version: "1.14.3"
           otp-version: "23.3.4.18"
+      - name: Cache Elixir deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            services/reticulum/deps
+            services/reticulum/_build
+          key: ${{ runner.os }}-mix-${{ env.MIX_ENV }}-${{ hashFiles('services/reticulum/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ env.MIX_ENV }}-
+            ${{ runner.os }}-mix-
       - name: Get dependencies
         working-directory: services/reticulum
         run: |
           mix local.hex --force
           mix local.rebar --force
           mix deps.get
-      - name: Compile
+      - name: Compile (test env)
         working-directory: services/reticulum
+        env:
+          MIX_ENV: test
         run: mix compile
       - name: Run tests
         working-directory: services/reticulum
@@ -70,6 +90,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "16"
+      - name: Cache npm deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-16-dialog-${{ hashFiles('services/dialog/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-16-dialog-
       - name: Install dependencies
         working-directory: services/dialog
         run: npm ci
@@ -88,6 +115,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "16"
+      - name: Cache yarn deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/yarn
+            services/spoke/node_modules
+          key: ${{ runner.os }}-yarn-16-spoke-${{ hashFiles('services/spoke/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-16-spoke-
       - name: Install dependencies
         working-directory: services/spoke
         run: yarn install --frozen-lockfile
@@ -107,6 +143,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Cache npm + Playwright
+        uses: actions/cache@v4
+        with:
+          path: |
+            e2e/node_modules
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-node-20-e2e-${{ hashFiles('e2e/package-lock.json') }}-pw
+          restore-keys: |
+            ${{ runner.os }}-node-20-e2e-
       - name: Install Playwright
         working-directory: e2e
         run: |
