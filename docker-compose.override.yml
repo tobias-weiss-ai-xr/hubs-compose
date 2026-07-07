@@ -26,6 +26,10 @@ services:
       - ./services/hubs:/code
 
   reticulum:
+    # BEGIN reticulum-http-port
+    ports:
+      - "4002:4001"
+    # END reticulum-http-port
     environment:
       PERMS_KEY_PATH: /certs/perms.priv.pem
     volumes:
