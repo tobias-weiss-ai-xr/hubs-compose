@@ -38,6 +38,10 @@ services:
       - ./services/reticulum/storage/dev:/code/storage/dev
 
   spoke:
+    command: yarn start
+    environment:
+      BASE_ASSETS_PATH: "/spoke/"
+      ROUTER_BASE_PATH: "/spoke"
     volumes:
       - ./services/spoke:/code
 

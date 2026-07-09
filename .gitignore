@@ -1,6 +1,13 @@
+# Upstream services — ignore all
 /services/
+# Track spoke assets (from Hubs-Foundation/hubs-cloud)
+!services/spoke/assets/
 /.sisyphus/
 erl_crash.dump
 /test-results/
 /e2e/test-results/
 /e2e/playwright-report/
+.env
+.playwright-mcp/
+*.md.bak
+*.png.bak
