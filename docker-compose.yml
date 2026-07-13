@@ -1,5 +1,6 @@
 services:
   db:
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${DB_CREDENTIALS:-postgres}
     healthcheck:
@@ -11,9 +12,10 @@ services:
     ports:
       - "5432:5432"
   coturn:
+    restart: unless-stopped
     environment:
       REALM: ret
-      PSQL: host=db dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30
+      PSQL: host=db dbname=ret_dev user=postgres password=${DB_CREDENTIALS:-postgres} options='-c search_path=coturn' connect_timeout=30
       TLS_PORT: 5349
       MIN_PORT: 50000
       MAX_PORT: 50050
@@ -33,6 +35,7 @@ services:
     depends_on:
       - db
   dialog:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/dialog.Dockerfile
@@ -47,8 +50,13 @@ services:
       - "40000-40050:40000-40050/udp"
     volumes:
       - dialog:/code
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4443"]
+      start_period: 15s
+      interval: 30s
     working_dir: /code
   hubs-admin:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
@@ -64,6 +72,7 @@ services:
       - hubs:/code
     working_dir: /code/admin
   hubs-client:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
@@ -81,12 +90,13 @@ services:
       - hubs:/code
     working_dir: /code
   hubs-storybook:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/hubs.Dockerfile
     command: npm run storybook
     healthcheck:
-      test: ["CMD", "curl", "-fk", "http://hubs.local:6006"]
+      test: ["CMD", "curl", "-fk", "http://localhost:6006"]
     platform: linux/amd64
     ports:
       - "6006:6006"
@@ -94,9 +104,14 @@ services:
       - hubs:/code
     working_dir: /code
   postgrest:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/postgrest.Dockerfile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      start_period: 10s
+      interval: 30s
   reticulum:
     build:
       context: ./services/reticulum
@@ -118,23 +133,35 @@ services:
       SMTP_SERVER: ${SMTP_SERVER:-mail.tobias-weiss.org}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-hubs@tobias-weiss.org}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-HubsApp2026}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-changeme}
       EMAIL_FROM: ${EMAIL_FROM:-hubs@tobias-weiss.org}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5}
+      GUARDIAN_SECRET_KEY: ${GUARDIAN_SECRET_KEY:-47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX}
+      UPLOAD_ENCRYPTION_KEY: ${UPLOAD_ENCRYPTION_KEY:-a8dedeb57adafa7821027d546f016efef5a501bd}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
+      RETICULUM_ADMIN_KEY: ${RETICULUM_ADMIN_KEY:-admin-only}
+      POSTGREST_PASSWORD: ${POSTGREST_PASSWORD:-password}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "4003:4000"
     healthcheck:
       test: ["CMD", "wget", "--no-check-certificate", "--no-verbose", "--tries=1", "--spider", "https://127.0.0.1:4000/stream-offline.png"]
       start_period: 60s
       interval: 30s
+    restart: unless-stopped
     volumes:
       - reticulum:/code
       - retstorage:/code/storage/dev
   spoke:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: dockerfiles/spoke.Dockerfile
     environment:
-      CORS_PROXY_SERVER: "hubs-proxy.local:4000"
+      CORS_PROXY_SERVER: "${CORS_PROXY_SERVER:-${HUBS_HOST:-hubs.tobias-weiss.org}:4000}"
       INTERNAL_HOSTNAME: spoke
     platform: linux/amd64
     ports:
