@@ -208,7 +208,7 @@ services:
 
 networks:
   default:
-    name: mozilla-hubs
+    name: hubs-compose
 volumes:
   coturn:
   dialog:
