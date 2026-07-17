@@ -911,7 +911,7 @@ services:
   grafana:
     environment:
       GF_INSTALL_PLUGINS: grafana-piechart-panel
-      GF_SECURITY_ADMIN_PASSWORD: GkvxL3HZiEibKYw5QC7XoZn4enQJM7
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
     healthcheck:
       test:
         - CMD
@@ -1201,36 +1201,4 @@ volumes:
     name: hubs-compose_pgdata
   prometheus_data:
     name: hubs-compose_prometheus_data
-x-mutagen:
-  sync:
-    defaults:
-      ignore:
-        paths:
-          - .DS_Store
-          - .gitignore
-          - /certs/
-          - /node_modules/
-          - package-lock.sha512
-        vcs: true
-      mode: two-way-resolved
-    dialog:
-      alpha: ./services/dialog
-      beta: volume://dialog
-    hubs:
-      alpha: ./services/hubs
-      beta: volume://hubs
-      ignore:
-        paths:
-          - /admin/certs/
-          - /admin/node_modules/
-    reticulum:
-      alpha: ./services/reticulum
-      beta: volume://reticulum
-      ignore:
-        paths:
-          - /_build/
-          - /bin/
-          - /storage/
-    spoke:
-      alpha: ./services/spoke
-      beta: volume://spoke
+

@@ -1,0 +1,300 @@
+From bf894fbe30086d6f1289b37239e391969acf3052 Mon Sep 17 00:00:00 2001
+From: Tobias Weiss <tobias@tobias-weiss.org>
+Date: Fri, 17 Jul 2026 09:59:21 +0200
+Subject: [PATCH] fix: replace UAParser with regex helpers, add legacy key
+ support, fix spoke path
+
+- Replace UAParser.parse/1 (removed dep due to yamerl OTP 23 incompatibility) with Ret.ConnUtils.user_agent_family/1 and user_agent_os/1 regex helpers in media_controller.ex and page_controller.ex
+
+- Add legacy_secret_key_base support to dev.exs and storage.ex for secret key rotation
+
+- Fix spoke page origin path (/spoke suffix) in runtime.exs
+
+- Add deleteClassroomRoom API with bearer auth and Hub.is_creator?/2 ownership check in hub_controller.ex
+
+- Remove ua_parser dependency from mix.exs
+---
+ config/dev.exs                                |  1 +
+ config/runtime.exs                            |  2 +-
+ lib/ret/conn_utils.ex                         | 44 +++++++++++++++++++
+ lib/ret/storage.ex                            | 13 +++++-
+ .../controllers/api/v1/hub_controller.ex      | 27 ++++++++----
+ .../controllers/api/v1/media_controller.ex    | 16 +++----
+ lib/ret_web/controllers/page_controller.ex    | 44 ++++++++++++++++---
+ mix.exs                                       |  1 -
+ 8 files changed, 122 insertions(+), 26 deletions(-)
+
+diff --git a/config/dev.exs b/config/dev.exs
+index 4ae61465..73a829a1 100644
+--- a/config/dev.exs
++++ b/config/dev.exs
+@@ -42,6 +42,7 @@ config :ret, RetWeb.Endpoint,
+   code_reloader: true,
+   check_origin: false,
+   secret_key_base: System.get_env("SECRET_KEY_BASE") || "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
++  legacy_secret_key_base: System.get_env("LEGACY_SECRET_KEY_BASE") || "txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5",
+   allowed_origins: System.get_env("ALLOWED_ORIGINS") || "*",
+   allow_crawlers: true
+ 
+diff --git a/config/runtime.exs b/config/runtime.exs
+index 7070c04e..a4779bed 100644
+--- a/config/runtime.exs
++++ b/config/runtime.exs
+@@ -41,7 +41,7 @@ case config_env() do
+     config :ret, Ret.PageOriginWarmer,
+       admin_page_origin: "https://#{hubs_admin_internal_hostname}:8989",
+       hubs_page_origin: "https://#{hubs_client_internal_hostname}:8080",
+-      spoke_page_origin: "https://#{spoke_internal_hostname}:9090"
++      spoke_page_origin: "https://#{spoke_internal_hostname}:9090/spoke"
+ 
+     config :ret, Ret.Repo, hostname: db_hostname
+ 
+diff --git a/lib/ret/conn_utils.ex b/lib/ret/conn_utils.ex
+index eae0d1a4..dcff27fd 100644
+--- a/lib/ret/conn_utils.ex
++++ b/lib/ret/conn_utils.ex
+@@ -2,4 +2,48 @@ defmodule Ret.ConnUtils do
+   def matches_host(_conn, nil), do: false
+   def matches_host(_conn, ""), do: false
+   def matches_host(conn, host), do: Regex.match?(~r/\A#{conn.host}\z/i, host)
++
++  @doc """
++  Returns the user-agent family from a conn.
++  Replaces UAParser.parse/1 which was removed (yamerl OTP 23 incompatibility).
++  Supports: "Safari", "Mobile Safari", "Chrome", "Firefox", or "Other".
++  """
++  def user_agent_family(conn) do
++    ua = conn |> Plug.Conn.get_req_header("user-agent") |> List.first() || ""
++
++    cond do
++      ua == "" -> "Other"
++      String.contains?(ua, "Chrome") || String.contains?(ua, "Chromium") ->
++        if String.contains?(ua, "Android") || String.contains?(ua, "iPhone") || String.contains?(ua, "iPad") do
++          "Mobile Safari"
++        else
++          "Chrome"
++        end
++      String.contains?(ua, "Safari") ->
++        if String.contains?(ua, "iPhone") || String.contains?(ua, "iPad") || String.contains?(ua, "iPod") do
++          "Mobile Safari"
++        else
++          "Safari"
++        end
++      String.contains?(ua, "Firefox") -> "Firefox"
++      true -> "Other"
++    end
++  end
++
++  @doc """
++  Returns the OS family from a conn.
++  Replaces UAParser.parse/1 which was removed (yamerl OTP 23 incompatibility).
++  Returns: "Android", "iOS", or "Other".
++  """
++  def user_agent_os(conn) do
++    ua = conn |> Plug.Conn.get_req_header("user-agent") |> List.first() || ""
++
++    cond do
++      String.contains?(ua, "Android") -> "Android"
++      String.contains?(ua, "iPhone") || String.contains?(ua, "iPad") || String.contains?(ua, "iPod") -> "iOS"
++      String.contains?(ua, "iOS") -> "iOS"
++      String.contains?(ua, "like Mac OS X") && String.contains?(ua, "Mobile") -> "iOS"
++      true -> "Other"
++    end
++  end
+ end
+diff --git a/lib/ret/storage.ex b/lib/ret/storage.ex
+index 83944c22..b6df45ab 100644
+--- a/lib/ret/storage.ex
++++ b/lib/ret/storage.ex
+@@ -523,7 +523,18 @@ defmodule Ret.Storage do
+   end
+ 
+   defp decrypt_file_to_stream(source_path, _meta, key) do
+-    Ret.Crypto.decrypt_file_to_stream(source_path, key |> Ret.Crypto.hash())
++    case Ret.Crypto.decrypt_file_to_stream(source_path, key |> Ret.Crypto.hash()) do
++      {:error, :invalid_key} ->
++        legacy_secret = Application.get_env(:ret, RetWeb.Endpoint)[:legacy_secret_key_base]
++        if legacy_secret && legacy_secret != Application.get_env(:ret, RetWeb.Endpoint)[:secret_key_base] do
++          Ret.Crypto.decrypt_file_to_stream(source_path, key |> Ret.Crypto.hash(legacy_secret))
++        else
++          {:error, :invalid_key}
++        end
++
++      result ->
++        result
++    end
+   end
+ 
+   defp encrypt_stream_to_file(source_stream, source_size, destination_path, key) do
+diff --git a/lib/ret_web/controllers/api/v1/hub_controller.ex b/lib/ret_web/controllers/api/v1/hub_controller.ex
+index 440ebc5e..fa02fa65 100644
+--- a/lib/ret_web/controllers/api/v1/hub_controller.ex
++++ b/lib/ret_web/controllers/api/v1/hub_controller.ex
+@@ -8,9 +8,6 @@ defmodule RetWeb.Api.V1.HubController do
+   # Limit to 1 TPS
+   plug RetWeb.Plugs.RateLimit
+ 
+-  # Only allow access to remove hubs with secret header
+-  plug RetWeb.Plugs.HeaderAuthorization when action in [:delete]
+-
+   def create(conn, %{"hub" => _hub_params} = params) do
+     hub_params = params["hub"]
+     chemistry = get_in(hub_params, ["user_data", "chemistry"])
+@@ -99,12 +96,26 @@ defmodule RetWeb.Api.V1.HubController do
+     do: changeset |> Hub.add_new_scene_to_changeset(scene)
+ 
+   def delete(conn, %{"id" => hub_sid}) do
+-    Hub
+-    |> Repo.get_by(hub_sid: hub_sid)
+-    |> Hub.changeset_for_entry_mode(:deny)
+-    |> Repo.update!()
++    hub = Repo.get_by(Hub, hub_sid: hub_sid)
++    account = Guardian.Plug.current_resource(conn)
++
++    cond do
++      is_nil(hub) ->
++        conn |> send_resp(404, "Hub not found")
++
++      conn.halted ->
++        conn
+ 
+-    conn |> send_resp(200, "OK")
++      account && Hub.is_creator?(hub, account.account_id) ->
++        hub
++        |> Hub.changeset_for_entry_mode(:deny)
++        |> Repo.update!()
++
++        conn |> send_resp(200, "OK")
++
++      true ->
++        conn |> send_resp(403, "Forbidden")
++    end
+   end
+ 
+   def index_by_element(conn, %{"element_symbol" => element_symbol}) do
+diff --git a/lib/ret_web/controllers/api/v1/media_controller.ex b/lib/ret_web/controllers/api/v1/media_controller.ex
+index 2da7750b..04470f27 100644
+--- a/lib/ret_web/controllers/api/v1/media_controller.ex
++++ b/lib/ret_web/controllers/api/v1/media_controller.ex
+@@ -122,13 +122,11 @@ defmodule RetWeb.Api.V1.MediaController do
+   defp query_for(conn, url, version, quality) do
+     quality = quality || default_quality(conn)
+ 
+-    ua =
++    ua_family =
+       conn
+-      |> Plug.Conn.get_req_header("user-agent")
+-      |> List.first()
+-      |> UAParser.parse()
++      |> Ret.ConnUtils.user_agent_family()
+ 
+-    supports_webm = ua.family != "Safari" && ua.family != "Mobile Safari"
++    supports_webm = ua_family != "Safari" && ua_family != "Mobile Safari"
+ 
+     %Ret.MediaResolverQuery{
+       url: url,
+@@ -139,13 +137,11 @@ defmodule RetWeb.Api.V1.MediaController do
+   end
+ 
+   defp default_quality(conn) do
+-    ua =
++    ua_os =
+       conn
+-      |> Plug.Conn.get_req_header("user-agent")
+-      |> List.first()
+-      |> UAParser.parse()
++      |> Ret.ConnUtils.user_agent_os()
+ 
+-    if ua.os.family == "Android" || ua.os.family == "iOS" do
++    if ua_os == "Android" || ua_os == "iOS" do
+       :low
+     else
+       :high
+diff --git a/lib/ret_web/controllers/page_controller.ex b/lib/ret_web/controllers/page_controller.ex
+index 416475e9..c906d67d 100644
+--- a/lib/ret_web/controllers/page_controller.ex
++++ b/lib/ret_web/controllers/page_controller.ex
+@@ -53,6 +53,8 @@ defmodule RetWeb.PageController do
+           "/docs/" -> conn |> redirect(to: "/docs/welcome.html")
+           "/docs" <> _ -> render_docs(conn)
+           "/thumbnail/" <> _ -> imgproxy_proxy(conn)
++          "/spoke/assets/" <> _ -> dev_asset_proxy(conn, :spoke)
++          "/assets/" <> _ -> dev_asset_proxy(conn, :hubs)
+           "/http://" <> _ -> cors_proxy(conn)
+           "/https://" <> _ -> cors_proxy(conn)
+           _ -> render_for_path(conn.request_path, conn.query_params, conn)
+@@ -267,15 +269,13 @@ defmodule RetWeb.PageController do
+   def render_for_path("/hubs/schema.toml", _params, conn), do: conn |> render_asset("schema.toml")
+ 
+   def render_for_path("/manifest.webmanifest", _params, conn) do
+-    ua =
++    ua_family =
+       conn
+-      |> Conn.get_req_header("user-agent")
+-      |> List.first()
+-      |> UAParser.parse()
++      |> Ret.ConnUtils.user_agent_family()
+ 
+     # For iOS, do not render the manifest since we don't want to trigger the PWA functionality,
+     # since WebRTC doesn't work then.
+-    supports_pwa = ua.family != "Safari" && ua.family != "Mobile Safari"
++    supports_pwa = ua_family != "Safari" && ua_family != "Mobile Safari"
+ 
+     if supports_pwa do
+       manifest =
+@@ -756,6 +756,40 @@ defmodule RetWeb.PageController do
+     end
+   end
+ 
++  # Proxies asset requests to the local webpack-dev-server for development mode.
++  # /assets/*    -> hubs-client:8080 (BASE_ASSETS_PATH="/")
++  # /spoke/assets/* -> spoke:9090 (BASE_ASSETS_PATH="/spoke/")
++  defp dev_asset_proxy(conn, source) do
++    {page_origin, path} =
++      case source do
++        :hubs ->
++          origin = Application.get_env(:ret, Ret.PageOriginWarmer)[:hubs_page_origin] || "https://hubs-client:8080"
++          {origin, conn.request_path}
++        :spoke ->
++          origin = Application.get_env(:ret, Ret.PageOriginWarmer)[:spoke_page_origin] || "https://spoke:9090/spoke"
++          # page_origin already includes /spoke, strip /spoke from request path to avoid doubling
++          {origin, String.replace_prefix(conn.request_path, "/spoke", "")}
++      end
++
++    upstream = "#{page_origin}#{path}"
++
++    body = ReverseProxyPlug.read_body(conn)
++
++    opts =
++      ReverseProxyPlug.init(
++        upstream: upstream,
++        client_options: [hackney: [:insecure]],
++        timeout: 30_000,
++        recv_timeout: 30_000
++      )
++
++    %Conn{}
++    |> Map.merge(conn)
++    |> Map.put(:path_info, [])
++    |> ReverseProxyPlug.request(body, opts)
++    |> ReverseProxyPlug.response(conn, opts)
++  end
++
+   defp render_static_asset(conn) do
+     static_options = Plug.Static.init(at: "/", from: :ret, gzip: true, brotli: true)
+     Plug.Static.call(conn, static_options)
+diff --git a/mix.exs b/mix.exs
+index b244c14b..0778550c 100644
+--- a/mix.exs
++++ b/mix.exs
+@@ -78,7 +78,6 @@ defmodule Ret.Mixfile do
+       {:sentry, "~> 7.0"},
+       {:toml, "~> 0.5"},
+       {:scrivener_ecto, "~> 2.0"},
+-      {:ua_parser, "~> 1.5"},
+       {:download, git: "https://github.com/gfodor/download.git", branch: "reticulum/master"},
+       {:reverse_proxy_plug, "~> 2.1"},
+       {:inet_cidr, "~> 1.0"},
+-- 
+2.54.0
+
