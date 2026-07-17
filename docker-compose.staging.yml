@@ -1,0 +1,21 @@
+services:
+  reticulum:
+    environment:
+      HUBS_HOST: staging.${HUBS_HOST:-hubs.tobias-weiss.org}
+
+  hubs-client:
+    command: npm run local -- --allowed-hosts all
+    environment:
+      HUBS_HOST: staging.${HUBS_HOST:-hubs.tobias-weiss.org}
+
+  hubs-admin:
+    command: npm run local -- --allowed-hosts all
+
+  spoke:
+    environment:
+      HUBS_HOST: staging.${HUBS_HOST:-hubs.tobias-weiss.org}
+
+  dialog:
+    ports:
+      - "4443"
+      - "7000"
