@@ -1,250 +1,1236 @@
+name: hubs-compose
 services:
-  db:
-    restart: unless-stopped
+  coturn:
+    build:
+      context: /home/weiss/git/hubs-compose
+      dockerfile: dockerfiles/coturn.Dockerfile
+    depends_on:
+      db:
+        condition: service_started
+        required: true
     environment:
-      POSTGRES_PASSWORD: ${DB_CREDENTIALS:-postgres}
+      MAX_PORT: "50050"
+      MIN_PORT: "50000"
+      PSQL: host=db dbname=ret_dev user=postgres password=postgres options='-c search_path=coturn' connect_timeout=30
+      REALM: ret
+      TLS_PORT: "5349"
     healthcheck:
-      test: ["CMD", "pg_isready"]
-    image: "postgres:14-alpine"
+      test:
+        - CMD
+        - nc
+        - -z
+        - localhost
+        - "5349"
+      interval: 30s
+      start_period: 10s
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5349
+        published: "5349"
+        protocol: tcp
+      - mode: ingress
+        target: 50000
+        published: "50000"
+        protocol: tcp
+      - mode: ingress
+        target: 50001
+        published: "50001"
+        protocol: tcp
+      - mode: ingress
+        target: 50002
+        published: "50002"
+        protocol: tcp
+      - mode: ingress
+        target: 50003
+        published: "50003"
+        protocol: tcp
+      - mode: ingress
+        target: 50004
+        published: "50004"
+        protocol: tcp
+      - mode: ingress
+        target: 50005
+        published: "50005"
+        protocol: tcp
+      - mode: ingress
+        target: 50006
+        published: "50006"
+        protocol: tcp
+      - mode: ingress
+        target: 50007
+        published: "50007"
+        protocol: tcp
+      - mode: ingress
+        target: 50008
+        published: "50008"
+        protocol: tcp
+      - mode: ingress
+        target: 50009
+        published: "50009"
+        protocol: tcp
+      - mode: ingress
+        target: 50010
+        published: "50010"
+        protocol: tcp
+      - mode: ingress
+        target: 50011
+        published: "50011"
+        protocol: tcp
+      - mode: ingress
+        target: 50012
+        published: "50012"
+        protocol: tcp
+      - mode: ingress
+        target: 50013
+        published: "50013"
+        protocol: tcp
+      - mode: ingress
+        target: 50014
+        published: "50014"
+        protocol: tcp
+      - mode: ingress
+        target: 50015
+        published: "50015"
+        protocol: tcp
+      - mode: ingress
+        target: 50016
+        published: "50016"
+        protocol: tcp
+      - mode: ingress
+        target: 50017
+        published: "50017"
+        protocol: tcp
+      - mode: ingress
+        target: 50018
+        published: "50018"
+        protocol: tcp
+      - mode: ingress
+        target: 50019
+        published: "50019"
+        protocol: tcp
+      - mode: ingress
+        target: 50020
+        published: "50020"
+        protocol: tcp
+      - mode: ingress
+        target: 50021
+        published: "50021"
+        protocol: tcp
+      - mode: ingress
+        target: 50022
+        published: "50022"
+        protocol: tcp
+      - mode: ingress
+        target: 50023
+        published: "50023"
+        protocol: tcp
+      - mode: ingress
+        target: 50024
+        published: "50024"
+        protocol: tcp
+      - mode: ingress
+        target: 50025
+        published: "50025"
+        protocol: tcp
+      - mode: ingress
+        target: 50026
+        published: "50026"
+        protocol: tcp
+      - mode: ingress
+        target: 50027
+        published: "50027"
+        protocol: tcp
+      - mode: ingress
+        target: 50028
+        published: "50028"
+        protocol: tcp
+      - mode: ingress
+        target: 50029
+        published: "50029"
+        protocol: tcp
+      - mode: ingress
+        target: 50030
+        published: "50030"
+        protocol: tcp
+      - mode: ingress
+        target: 50031
+        published: "50031"
+        protocol: tcp
+      - mode: ingress
+        target: 50032
+        published: "50032"
+        protocol: tcp
+      - mode: ingress
+        target: 50033
+        published: "50033"
+        protocol: tcp
+      - mode: ingress
+        target: 50034
+        published: "50034"
+        protocol: tcp
+      - mode: ingress
+        target: 50035
+        published: "50035"
+        protocol: tcp
+      - mode: ingress
+        target: 50036
+        published: "50036"
+        protocol: tcp
+      - mode: ingress
+        target: 50037
+        published: "50037"
+        protocol: tcp
+      - mode: ingress
+        target: 50038
+        published: "50038"
+        protocol: tcp
+      - mode: ingress
+        target: 50039
+        published: "50039"
+        protocol: tcp
+      - mode: ingress
+        target: 50040
+        published: "50040"
+        protocol: tcp
+      - mode: ingress
+        target: 50041
+        published: "50041"
+        protocol: tcp
+      - mode: ingress
+        target: 50042
+        published: "50042"
+        protocol: tcp
+      - mode: ingress
+        target: 50043
+        published: "50043"
+        protocol: tcp
+      - mode: ingress
+        target: 50044
+        published: "50044"
+        protocol: tcp
+      - mode: ingress
+        target: 50045
+        published: "50045"
+        protocol: tcp
+      - mode: ingress
+        target: 50046
+        published: "50046"
+        protocol: tcp
+      - mode: ingress
+        target: 50047
+        published: "50047"
+        protocol: tcp
+      - mode: ingress
+        target: 50048
+        published: "50048"
+        protocol: tcp
+      - mode: ingress
+        target: 50049
+        published: "50049"
+        protocol: tcp
+      - mode: ingress
+        target: 50050
+        published: "50050"
+        protocol: tcp
+      - mode: ingress
+        target: 50000
+        published: "50000"
+        protocol: udp
+      - mode: ingress
+        target: 50001
+        published: "50001"
+        protocol: udp
+      - mode: ingress
+        target: 50002
+        published: "50002"
+        protocol: udp
+      - mode: ingress
+        target: 50003
+        published: "50003"
+        protocol: udp
+      - mode: ingress
+        target: 50004
+        published: "50004"
+        protocol: udp
+      - mode: ingress
+        target: 50005
+        published: "50005"
+        protocol: udp
+      - mode: ingress
+        target: 50006
+        published: "50006"
+        protocol: udp
+      - mode: ingress
+        target: 50007
+        published: "50007"
+        protocol: udp
+      - mode: ingress
+        target: 50008
+        published: "50008"
+        protocol: udp
+      - mode: ingress
+        target: 50009
+        published: "50009"
+        protocol: udp
+      - mode: ingress
+        target: 50010
+        published: "50010"
+        protocol: udp
+      - mode: ingress
+        target: 50011
+        published: "50011"
+        protocol: udp
+      - mode: ingress
+        target: 50012
+        published: "50012"
+        protocol: udp
+      - mode: ingress
+        target: 50013
+        published: "50013"
+        protocol: udp
+      - mode: ingress
+        target: 50014
+        published: "50014"
+        protocol: udp
+      - mode: ingress
+        target: 50015
+        published: "50015"
+        protocol: udp
+      - mode: ingress
+        target: 50016
+        published: "50016"
+        protocol: udp
+      - mode: ingress
+        target: 50017
+        published: "50017"
+        protocol: udp
+      - mode: ingress
+        target: 50018
+        published: "50018"
+        protocol: udp
+      - mode: ingress
+        target: 50019
+        published: "50019"
+        protocol: udp
+      - mode: ingress
+        target: 50020
+        published: "50020"
+        protocol: udp
+      - mode: ingress
+        target: 50021
+        published: "50021"
+        protocol: udp
+      - mode: ingress
+        target: 50022
+        published: "50022"
+        protocol: udp
+      - mode: ingress
+        target: 50023
+        published: "50023"
+        protocol: udp
+      - mode: ingress
+        target: 50024
+        published: "50024"
+        protocol: udp
+      - mode: ingress
+        target: 50025
+        published: "50025"
+        protocol: udp
+      - mode: ingress
+        target: 50026
+        published: "50026"
+        protocol: udp
+      - mode: ingress
+        target: 50027
+        published: "50027"
+        protocol: udp
+      - mode: ingress
+        target: 50028
+        published: "50028"
+        protocol: udp
+      - mode: ingress
+        target: 50029
+        published: "50029"
+        protocol: udp
+      - mode: ingress
+        target: 50030
+        published: "50030"
+        protocol: udp
+      - mode: ingress
+        target: 50031
+        published: "50031"
+        protocol: udp
+      - mode: ingress
+        target: 50032
+        published: "50032"
+        protocol: udp
+      - mode: ingress
+        target: 50033
+        published: "50033"
+        protocol: udp
+      - mode: ingress
+        target: 50034
+        published: "50034"
+        protocol: udp
+      - mode: ingress
+        target: 50035
+        published: "50035"
+        protocol: udp
+      - mode: ingress
+        target: 50036
+        published: "50036"
+        protocol: udp
+      - mode: ingress
+        target: 50037
+        published: "50037"
+        protocol: udp
+      - mode: ingress
+        target: 50038
+        published: "50038"
+        protocol: udp
+      - mode: ingress
+        target: 50039
+        published: "50039"
+        protocol: udp
+      - mode: ingress
+        target: 50040
+        published: "50040"
+        protocol: udp
+      - mode: ingress
+        target: 50041
+        published: "50041"
+        protocol: udp
+      - mode: ingress
+        target: 50042
+        published: "50042"
+        protocol: udp
+      - mode: ingress
+        target: 50043
+        published: "50043"
+        protocol: udp
+      - mode: ingress
+        target: 50044
+        published: "50044"
+        protocol: udp
+      - mode: ingress
+        target: 50045
+        published: "50045"
+        protocol: udp
+      - mode: ingress
+        target: 50046
+        published: "50046"
+        protocol: udp
+      - mode: ingress
+        target: 50047
+        published: "50047"
+        protocol: udp
+      - mode: ingress
+        target: 50048
+        published: "50048"
+        protocol: udp
+      - mode: ingress
+        target: 50049
+        published: "50049"
+        protocol: udp
+      - mode: ingress
+        target: 50050
+        published: "50050"
+        protocol: udp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: coturn
+        target: /var/lib/coturn
+        volume: {}
+  db:
+    environment:
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+    image: postgres:14-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    restart: unless-stopped
     user: postgres
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-  coturn:
-    restart: unless-stopped
-    environment:
-      REALM: ret
-      PSQL: host=db dbname=ret_dev user=postgres password=${DB_CREDENTIALS:-postgres} options='-c search_path=coturn' connect_timeout=30
-      TLS_PORT: 5349
-      MIN_PORT: 50000
-      MAX_PORT: 50050
-    build:
-      context: .
-      dockerfile: dockerfiles/coturn.Dockerfile
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "5349"]
-      start_period: 10s
-      interval: 30s
-    volumes:
-      - coturn:/var/lib/coturn
-    ports:
-      - "5349:5349"
-      - "50000-50050:50000-50050"
-      - "50000-50050:50000-50050/udp"
-    depends_on:
-      - db
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
+        volume: {}
   dialog:
-    restart: unless-stopped
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/dialog.Dockerfile
     environment:
+      AUTH_KEY: /etc/perms.pub.pem
+      HTTPS_CERT_FULLCHAIN: /etc/ssl/fullchain.pem
+      HTTPS_CERT_PRIVKEY: /etc/ssl/privkey.pem
       INTERACTIVE: "false"
-      MEDIASOUP_MIN_PORT: 40000
-      MEDIASOUP_MAX_PORT: 40050
-      MEDIASOUP_ANNOUNCED_IP: ${MEDIASOUP_ANNOUNCED_IP:-hubs.local}
-    ports:
-      - "4443:4443"
-      - "40000-40050:40000-40050"
-      - "40000-40050:40000-40050/udp"
-    volumes:
-      - dialog:/code
+      MEDIASOUP_ANNOUNCED_IP: 92.208.105.55
+      MEDIASOUP_MAX_PORT: "40050"
+      MEDIASOUP_MIN_PORT: "40000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7000/meta"]
-      start_period: 15s
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:7000/meta
       interval: 30s
-    working_dir: /code
-  hubs-admin:
+      start_period: 15s
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 4443
+        published: "4443"
+        protocol: tcp
+      - mode: ingress
+        target: 40000
+        published: "40000"
+        protocol: tcp
+      - mode: ingress
+        target: 40001
+        published: "40001"
+        protocol: tcp
+      - mode: ingress
+        target: 40002
+        published: "40002"
+        protocol: tcp
+      - mode: ingress
+        target: 40003
+        published: "40003"
+        protocol: tcp
+      - mode: ingress
+        target: 40004
+        published: "40004"
+        protocol: tcp
+      - mode: ingress
+        target: 40005
+        published: "40005"
+        protocol: tcp
+      - mode: ingress
+        target: 40006
+        published: "40006"
+        protocol: tcp
+      - mode: ingress
+        target: 40007
+        published: "40007"
+        protocol: tcp
+      - mode: ingress
+        target: 40008
+        published: "40008"
+        protocol: tcp
+      - mode: ingress
+        target: 40009
+        published: "40009"
+        protocol: tcp
+      - mode: ingress
+        target: 40010
+        published: "40010"
+        protocol: tcp
+      - mode: ingress
+        target: 40011
+        published: "40011"
+        protocol: tcp
+      - mode: ingress
+        target: 40012
+        published: "40012"
+        protocol: tcp
+      - mode: ingress
+        target: 40013
+        published: "40013"
+        protocol: tcp
+      - mode: ingress
+        target: 40014
+        published: "40014"
+        protocol: tcp
+      - mode: ingress
+        target: 40015
+        published: "40015"
+        protocol: tcp
+      - mode: ingress
+        target: 40016
+        published: "40016"
+        protocol: tcp
+      - mode: ingress
+        target: 40017
+        published: "40017"
+        protocol: tcp
+      - mode: ingress
+        target: 40018
+        published: "40018"
+        protocol: tcp
+      - mode: ingress
+        target: 40019
+        published: "40019"
+        protocol: tcp
+      - mode: ingress
+        target: 40020
+        published: "40020"
+        protocol: tcp
+      - mode: ingress
+        target: 40021
+        published: "40021"
+        protocol: tcp
+      - mode: ingress
+        target: 40022
+        published: "40022"
+        protocol: tcp
+      - mode: ingress
+        target: 40023
+        published: "40023"
+        protocol: tcp
+      - mode: ingress
+        target: 40024
+        published: "40024"
+        protocol: tcp
+      - mode: ingress
+        target: 40025
+        published: "40025"
+        protocol: tcp
+      - mode: ingress
+        target: 40026
+        published: "40026"
+        protocol: tcp
+      - mode: ingress
+        target: 40027
+        published: "40027"
+        protocol: tcp
+      - mode: ingress
+        target: 40028
+        published: "40028"
+        protocol: tcp
+      - mode: ingress
+        target: 40029
+        published: "40029"
+        protocol: tcp
+      - mode: ingress
+        target: 40030
+        published: "40030"
+        protocol: tcp
+      - mode: ingress
+        target: 40031
+        published: "40031"
+        protocol: tcp
+      - mode: ingress
+        target: 40032
+        published: "40032"
+        protocol: tcp
+      - mode: ingress
+        target: 40033
+        published: "40033"
+        protocol: tcp
+      - mode: ingress
+        target: 40034
+        published: "40034"
+        protocol: tcp
+      - mode: ingress
+        target: 40035
+        published: "40035"
+        protocol: tcp
+      - mode: ingress
+        target: 40036
+        published: "40036"
+        protocol: tcp
+      - mode: ingress
+        target: 40037
+        published: "40037"
+        protocol: tcp
+      - mode: ingress
+        target: 40038
+        published: "40038"
+        protocol: tcp
+      - mode: ingress
+        target: 40039
+        published: "40039"
+        protocol: tcp
+      - mode: ingress
+        target: 40040
+        published: "40040"
+        protocol: tcp
+      - mode: ingress
+        target: 40041
+        published: "40041"
+        protocol: tcp
+      - mode: ingress
+        target: 40042
+        published: "40042"
+        protocol: tcp
+      - mode: ingress
+        target: 40043
+        published: "40043"
+        protocol: tcp
+      - mode: ingress
+        target: 40044
+        published: "40044"
+        protocol: tcp
+      - mode: ingress
+        target: 40045
+        published: "40045"
+        protocol: tcp
+      - mode: ingress
+        target: 40046
+        published: "40046"
+        protocol: tcp
+      - mode: ingress
+        target: 40047
+        published: "40047"
+        protocol: tcp
+      - mode: ingress
+        target: 40048
+        published: "40048"
+        protocol: tcp
+      - mode: ingress
+        target: 40049
+        published: "40049"
+        protocol: tcp
+      - mode: ingress
+        target: 40050
+        published: "40050"
+        protocol: tcp
+      - mode: ingress
+        target: 40000
+        published: "40000"
+        protocol: udp
+      - mode: ingress
+        target: 40001
+        published: "40001"
+        protocol: udp
+      - mode: ingress
+        target: 40002
+        published: "40002"
+        protocol: udp
+      - mode: ingress
+        target: 40003
+        published: "40003"
+        protocol: udp
+      - mode: ingress
+        target: 40004
+        published: "40004"
+        protocol: udp
+      - mode: ingress
+        target: 40005
+        published: "40005"
+        protocol: udp
+      - mode: ingress
+        target: 40006
+        published: "40006"
+        protocol: udp
+      - mode: ingress
+        target: 40007
+        published: "40007"
+        protocol: udp
+      - mode: ingress
+        target: 40008
+        published: "40008"
+        protocol: udp
+      - mode: ingress
+        target: 40009
+        published: "40009"
+        protocol: udp
+      - mode: ingress
+        target: 40010
+        published: "40010"
+        protocol: udp
+      - mode: ingress
+        target: 40011
+        published: "40011"
+        protocol: udp
+      - mode: ingress
+        target: 40012
+        published: "40012"
+        protocol: udp
+      - mode: ingress
+        target: 40013
+        published: "40013"
+        protocol: udp
+      - mode: ingress
+        target: 40014
+        published: "40014"
+        protocol: udp
+      - mode: ingress
+        target: 40015
+        published: "40015"
+        protocol: udp
+      - mode: ingress
+        target: 40016
+        published: "40016"
+        protocol: udp
+      - mode: ingress
+        target: 40017
+        published: "40017"
+        protocol: udp
+      - mode: ingress
+        target: 40018
+        published: "40018"
+        protocol: udp
+      - mode: ingress
+        target: 40019
+        published: "40019"
+        protocol: udp
+      - mode: ingress
+        target: 40020
+        published: "40020"
+        protocol: udp
+      - mode: ingress
+        target: 40021
+        published: "40021"
+        protocol: udp
+      - mode: ingress
+        target: 40022
+        published: "40022"
+        protocol: udp
+      - mode: ingress
+        target: 40023
+        published: "40023"
+        protocol: udp
+      - mode: ingress
+        target: 40024
+        published: "40024"
+        protocol: udp
+      - mode: ingress
+        target: 40025
+        published: "40025"
+        protocol: udp
+      - mode: ingress
+        target: 40026
+        published: "40026"
+        protocol: udp
+      - mode: ingress
+        target: 40027
+        published: "40027"
+        protocol: udp
+      - mode: ingress
+        target: 40028
+        published: "40028"
+        protocol: udp
+      - mode: ingress
+        target: 40029
+        published: "40029"
+        protocol: udp
+      - mode: ingress
+        target: 40030
+        published: "40030"
+        protocol: udp
+      - mode: ingress
+        target: 40031
+        published: "40031"
+        protocol: udp
+      - mode: ingress
+        target: 40032
+        published: "40032"
+        protocol: udp
+      - mode: ingress
+        target: 40033
+        published: "40033"
+        protocol: udp
+      - mode: ingress
+        target: 40034
+        published: "40034"
+        protocol: udp
+      - mode: ingress
+        target: 40035
+        published: "40035"
+        protocol: udp
+      - mode: ingress
+        target: 40036
+        published: "40036"
+        protocol: udp
+      - mode: ingress
+        target: 40037
+        published: "40037"
+        protocol: udp
+      - mode: ingress
+        target: 40038
+        published: "40038"
+        protocol: udp
+      - mode: ingress
+        target: 40039
+        published: "40039"
+        protocol: udp
+      - mode: ingress
+        target: 40040
+        published: "40040"
+        protocol: udp
+      - mode: ingress
+        target: 40041
+        published: "40041"
+        protocol: udp
+      - mode: ingress
+        target: 40042
+        published: "40042"
+        protocol: udp
+      - mode: ingress
+        target: 40043
+        published: "40043"
+        protocol: udp
+      - mode: ingress
+        target: 40044
+        published: "40044"
+        protocol: udp
+      - mode: ingress
+        target: 40045
+        published: "40045"
+        protocol: udp
+      - mode: ingress
+        target: 40046
+        published: "40046"
+        protocol: udp
+      - mode: ingress
+        target: 40047
+        published: "40047"
+        protocol: udp
+      - mode: ingress
+        target: 40048
+        published: "40048"
+        protocol: udp
+      - mode: ingress
+        target: 40049
+        published: "40049"
+        protocol: udp
+      - mode: ingress
+        target: 40050
+        published: "40050"
+        protocol: udp
     restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/dialog
+        target: /code
+        bind: {}
+    working_dir: /code
+  grafana:
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_SECURITY_ADMIN_PASSWORD: GkvxL3HZiEibKYw5QC7XoZn4enQJM7
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:3000/api/health
+      interval: 30s
+      start_period: 15s
+    image: grafana/grafana:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3333"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /home/weiss/git/hubs-compose/monitoring/grafana/datasources
+        target: /etc/grafana/provisioning/datasources
+        bind: {}
+      - type: volume
+        source: grafana_data
+        target: /var/lib/grafana
+        volume: {}
+  hubs-admin:
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local -- --allowed-hosts all
+    command:
+      - npm
+      - run
+      - local
+      - --
+      - --allowed-hosts
+      - all
     environment:
       INTERNAL_HOSTNAME: hubs-admin
     healthcheck:
-      test: ["CMD", "curl", "-fk", "https://localhost:8989/admin.html"]
+      test:
+        - CMD
+        - curl
+        - -fk
+        - https://localhost:8989/admin.html
+    networks:
+      default: null
     platform: linux/amd64
     ports:
-      - "8989:8989"
+      - mode: ingress
+        target: 8989
+        published: "8989"
+        protocol: tcp
+    restart: unless-stopped
     volumes:
-      - hubs:/code
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/hubs
+        target: /code
+        bind: {}
     working_dir: /code/admin
   hubs-client:
-    restart: unless-stopped
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run local -- --allowed-hosts all
+    command:
+      - npm
+      - run
+      - local
+      - --
+      - --allowed-hosts
+      - all
     environment:
-      HUBS_HOST: ${HUBS_HOST:-hubs.tobias-weiss.org}
+      HUBS_HOST: hubs.chemie-lernen.org
       INTERNAL_HOSTNAME: hubs-client
     healthcheck:
+      test:
+        - CMD
+        - curl
+        - -fk
+        - https://localhost:8080
       start_period: 3m30s
-      test: ["CMD", "curl", "-fk", "https://localhost:8080"]
+    networks:
+      default: null
     platform: linux/amd64
     ports:
-      - "8083:8080"
+      - mode: ingress
+        target: 8080
+        published: "8083"
+        protocol: tcp
+    restart: unless-stopped
     volumes:
-      - hubs:/code
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/hubs
+        target: /code
+        bind: {}
     working_dir: /code
   hubs-storybook:
-    restart: unless-stopped
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/hubs.Dockerfile
-    command: npm run storybook
+    command:
+      - sh
+      - -c
+      - "chown -R node:node /code/node_modules/.cache/storybook 2>/dev/null; npm run storybook"
     healthcheck:
-      test: ["CMD", "curl", "-fk", "http://localhost:6006"]
+      test:
+        - CMD
+        - curl
+        - -fk
+        - http://localhost:6006
+    networks:
+      default: null
     platform: linux/amd64
     ports:
-      - "6006:6006"
+      - mode: ingress
+        target: 6006
+        published: "6006"
+        protocol: tcp
+    restart: unless-stopped
     volumes:
-      - hubs:/code
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/hubs
+        target: /code
+        bind: {}
     working_dir: /code
   postgrest:
-    restart: unless-stopped
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/postgrest.Dockerfile
+    networks:
+      default: null
+    restart: unless-stopped
+  prometheus:
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:9090/-/healthy
+      interval: 30s
+      start_period: 15s
+    image: prom/prometheus:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 9090
+        published: "9092"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /home/weiss/git/hubs-compose/monitoring/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        bind: {}
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+        volume: {}
+  pse-vr:
+    container_name: pse-vr
+    image: hello-webxr:latest
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "3000"
+        protocol: tcp
+    restart: unless-stopped
   reticulum:
     build:
-      context: ./services/reticulum
+      context: /home/weiss/git/hubs-compose/services/reticulum
       dockerfile: TurkeyDockerfile
       target: dev
     depends_on:
-      - db
+      db:
+        condition: service_started
+        required: true
     environment:
-      HUBS_HOST: ${HUBS_HOST:-hubs.tobias-weiss.org}
-      DB_CREDENTIALS: ${DB_CREDENTIALS:-postgres}
+      ALLOWED_ORIGINS: '*'
+      CORS_ORIGINS: '*'
+      DB_CREDENTIALS: postgres
       DB_HOST: db
-      DIALOG_HOSTNAME: ${DIALOG_HOSTNAME:-hubs.local}
-      DIALOG_PORT: ${DIALOG_PORT:-4443}
-      HUBS_ADMIN_INTERNAL_HOSTNAME: ${HUBS_ADMIN_INTERNAL_HOSTNAME:-hubs-admin}
-      HUBS_CLIENT_INTERNAL_HOSTNAME: ${HUBS_CLIENT_INTERNAL_HOSTNAME:-hubs-client}
-      PERMS_KEY_PATH: ${PERMS_KEY_PATH:-/etc/perms.pem}
-      POSTGREST_INTERNAL_HOSTNAME: ${POSTGREST_INTERNAL_HOSTNAME:-postgrest}
-      SPOKE_INTERNAL_HOSTNAME: ${SPOKE_INTERNAL_HOSTNAME:-spoke}
-      SMTP_SERVER: ${SMTP_SERVER:-mail.tobias-weiss.org}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-hubs@tobias-weiss.org}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-changeme}
-      EMAIL_FROM: ${EMAIL_FROM:-hubs@tobias-weiss.org}
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-txlMOtlaY5x3crvOCko4uV5PM29ul3zGo1oBGNO3cDXx+7GHLKqt0gR9qzgThxb5}
-      GUARDIAN_SECRET_KEY: ${GUARDIAN_SECRET_KEY:-47iqPEdWcfE7xRnyaxKDLt9OGEtkQG3SycHBEMOuT2qARmoESnhc76IgCUjaQIwX}
-      UPLOAD_ENCRYPTION_KEY: ${UPLOAD_ENCRYPTION_KEY:-a8dedeb57adafa7821027d546f016efef5a501bd}
-      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
-      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
-      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
-      RETICULUM_ADMIN_KEY: ${RETICULUM_ADMIN_KEY:-admin-only}
-      POSTGREST_PASSWORD: ${POSTGREST_PASSWORD:-password}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
-    ports:
-      - "4003:4000"
+      DIALOG_HOSTNAME: nearspark.hubs.chemie-lernen.org
+      DIALOG_PORT: "443"
+      EMAIL_FROM: hubs@tobias-weiss.org
+      GUARDIAN_SECRET_KEY: 7GHmazKuDCY9uI3uBEIkxhrKhpTWK6hMosHUg6M7T2xdEg3g6WY/IPkPKxBPwHMl5ha9qoDwpD0AI9qmgVYDNA==
+      HUBS_ADMIN_INTERNAL_HOSTNAME: hubs-admin
+      HUBS_CLIENT_INTERNAL_HOSTNAME: hubs-client
+      HUBS_HOST: hubs.chemie-lernen.org
+      PERMS_KEY_PATH: /certs/perms.priv.pem
+      POSTGREST_INTERNAL_HOSTNAME: postgrest
+      POSTGREST_PASSWORD: FeClM6v3DnbDVXgLDcNiH3sMYa02ucCE
+      RETICULUM_ADMIN_KEY: c763d12b11ae66e56bbbe3d55f97c765e8c351cbe8ba602340626ee3e5d4b6a0
+      SECRET_KEY_BASE: M9LS9yWwJdM/jsDwXdaT8W2j2796X7/mdfmtPsFnZGJr4OX9RTClkZR3k5gJQKADeyC6WB4DymMnYTTjw3QcVg==
+      SMTP_PASSWORD: HubsApp2026
+      SMTP_PORT: "587"
+      SMTP_SERVER: mail.tobias-weiss.org
+      SMTP_USERNAME: hubs@tobias-weiss.org
+      SPOKE_INTERNAL_HOSTNAME: spoke
+      UPLOAD_ENCRYPTION_KEY: f158064cf74efe889e93ab1121aa7ff510f5faefdb9c38382873fb03d30f0ae3
+      VAPID_PRIVATE_KEY: LG9xXvfX69GpasNuTUz7Ax0mYnXkqMcPZ6gw_pUklvs
+      VAPID_PUBLIC_KEY: BKrqKDrNIZWgwkDhaN5DOIwr0XrHYi69ss7-KvpA5FZkzPBUEaI1CXtJ9r2svQ1kCiRGKX3I9GrZm_1cM0ZWVcs
+      VAPID_SUBJECT: mailto:admin@chemie-lernen.org
     healthcheck:
-      test: ["CMD", "wget", "--no-check-certificate", "--no-verbose", "--tries=1", "--spider", "https://127.0.0.1:4000/stream-offline.png"]
-      start_period: 60s
+      test:
+        - CMD
+        - wget
+        - --no-check-certificate
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - https://127.0.0.1:4000/stream-offline.png
       interval: 30s
+      start_period: 1m0s
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 4000
+        published: "4003"
+        protocol: tcp
+      - mode: ingress
+        target: 4001
+        published: "4002"
+        protocol: tcp
     restart: unless-stopped
     volumes:
-      - reticulum:/code
-      - retstorage:/code/storage/dev
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/reticulum
+        target: /code
+        bind: {}
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/reticulum/storage/dev
+        target: /code/storage/dev
+        bind: {}
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/dialog/certs
+        target: /certs
+        read_only: true
+        bind: {}
   spoke:
-    restart: unless-stopped
     build:
-      context: .
+      context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/spoke.Dockerfile
+    command:
+      - yarn
+      - start
     environment:
-      CORS_PROXY_SERVER: "${CORS_PROXY_SERVER:-${HUBS_HOST:-hubs.tobias-weiss.org}:4000}"
+      BASE_ASSETS_PATH: /spoke/
+      CORS_PROXY_SERVER: hubs.chemie-lernen.org:4000
       INTERNAL_HOSTNAME: spoke
+      ROUTER_BASE_PATH: /spoke
+    networks:
+      default: null
     platform: linux/amd64
     ports:
-      - "9091:9090"
-    volumes:
-      - spoke:/code
-
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    ports:
-      - "9092:9090"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-      - "--web.console.templates=/usr/share/prometheus/consoles"
-    networks:
-      default:
+      - mode: ingress
+        target: 9090
+        published: "9091"
+        protocol: tcp
     restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:latest
     volumes:
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
-      - grafana_data:/var/lib/grafana
-    ports:
-      - "3333:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
-    networks:
-      default:
-    restart: unless-stopped
-
-  pse-vr:
-    image: hello-webxr:latest
-    container_name: pse-vr
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-
+      - type: bind
+        source: /home/weiss/git/hubs-compose/services/spoke
+        target: /code
+        bind: {}
 networks:
   default:
     name: hubs-compose
 volumes:
   coturn:
-  dialog:
+    name: hubs-compose_coturn
   grafana_data:
-  prometheus_data:
-  hubs:
+    name: hubs-compose_grafana_data
   pgdata:
-  reticulum:
-  retstorage:
-  spoke:
+    name: hubs-compose_pgdata
+  prometheus_data:
+    name: hubs-compose_prometheus_data
 x-mutagen:
   sync:
     defaults:
       ignore:
         paths:
-          - ".DS_Store"
-          - ".gitignore"
-          - "/certs/"
-          - "/node_modules/"
-          - "package-lock.sha512"
+          - .DS_Store
+          - .gitignore
+          - /certs/
+          - /node_modules/
+          - package-lock.sha512
         vcs: true
-      mode: "two-way-resolved"
+      mode: two-way-resolved
     dialog:
       alpha: ./services/dialog
-      beta: "volume://dialog"
+      beta: volume://dialog
     hubs:
       alpha: ./services/hubs
-      beta: "volume://hubs"
+      beta: volume://hubs
       ignore:
         paths:
-          - "/admin/certs/"
-          - "/admin/node_modules/"
+          - /admin/certs/
+          - /admin/node_modules/
     reticulum:
       alpha: ./services/reticulum
-      beta: "volume://reticulum"
+      beta: volume://reticulum
       ignore:
         paths:
-          - "/_build/"
-          - "/bin/"
-          - "/storage/"
+          - /_build/
+          - /bin/
+          - /storage/
     spoke:
       alpha: ./services/spoke
-      beta: "volume://spoke"
+      beta: volume://spoke
