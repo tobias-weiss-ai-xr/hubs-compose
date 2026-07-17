@@ -4,7 +4,7 @@ on:
     branches: [main, master]
     paths:
       - 'dockerfiles/*.Dockerfile'
-      - 'services/*/'
+      - 'services/**/*'
       - 'docker-compose.yml'
   workflow_dispatch:
   schedule:
@@ -23,7 +23,20 @@ jobs:
 
     strategy:
       matrix:
-        service: [reticulum, spoke, hubs, dialog, postgrest, coturn]
+        include:
+          - service: reticulum
+            dockerfile: services/reticulum/TurkeyDockerfile
+            target: dev
+          - service: spoke
+            dockerfile: dockerfiles/spoke.Dockerfile
+          - service: hubs
+            dockerfile: dockerfiles/hubs.Dockerfile
+          - service: dialog
+            dockerfile: dockerfiles/dialog.Dockerfile
+          - service: postgrest
+            dockerfile: dockerfiles/postgrest.Dockerfile
+          - service: coturn
+            dockerfile: dockerfiles/coturn.Dockerfile
       fail-fast: false
 
     steps:
@@ -39,11 +52,20 @@ jobs:
       - name: Set image name
         run: echo "IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}" >> $GITHUB_ENV
 
+      - name: Set build context
+        run: |
+          if [[ "${{ matrix.dockerfile }}" == services/* ]]; then
+            echo "BUILD_CONTEXT=$(dirname ${{ matrix.dockerfile }})" >> $GITHUB_ENV
+          else
+            echo "BUILD_CONTEXT=." >> $GITHUB_ENV
+          fi
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: dockerfiles/${{ matrix.service }}.Dockerfile
+          context: ${{ env.BUILD_CONTEXT }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target || '' }}
           push: true
           tags: |
             ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
