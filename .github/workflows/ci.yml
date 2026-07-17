@@ -1,0 +1,34 @@
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: |
+          docker compose config
+          echo "✅ docker-compose.yml is valid"
+
+      - name: Validate Dockerfiles exist
+        run: |
+          for df in dockerfiles/*.Dockerfile; do
+            [ -f "$df" ] && echo "✅ $(basename $df) exists"
+          done
+
+      - name: Check .env.example matches .env keys
+        run: |
+          if [ -f .env.example ] && [ -f .env ]; then
+            missing=$(comm -23 <(grep -v '^#' .env.example | cut -d= -f1 | sort -u) <(grep -v '^#' .env | cut -d= -f1 | sort -u))
+            if [ -n "$missing" ]; then
+              echo "⚠️  Missing from .env:"
+              echo "$missing"
+            fi
+            echo "✅ .env keys checked"
+          fi

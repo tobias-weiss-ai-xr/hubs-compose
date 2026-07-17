@@ -4,6 +4,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+env:
+  DEPLOY_DIR: /opt/containers/hubs-compose
+  REPO_URL: git@codeberg.org:graphwiz-ai/hubs-compose.git
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,10 +23,37 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            cd /opt/containers/hubs-compose
+            cd ${{ env.DEPLOY_DIR }}
+
+            # Ensure repo is cloned and on correct branch
+            if [ ! -d .git ]; then
+              git clone ${{ env.REPO_URL }} .
+            fi
+            git fetch origin
+            git checkout main
             git pull origin main
+
+            # Pull latest sub-repo changes
+            for sub in services/reticulum services/spoke services/hubs services/dialog; do
+              if [ -d "$sub/.git" ]; then
+                git -C "$sub" pull origin master 2>/dev/null || true
+              fi
+            done
+
+            # Build and deploy all services
             docker compose build --parallel
-            docker compose up -d --force-recreate db reticulum spoke postgrest
-            echo "Deployment complete. Checking services..."
-            sleep 10
-            docker compose ps
+            docker compose up -d --force-recreate
+
+            # Wait and verify
+            echo "Waiting for services to become healthy..."
+            sleep 15
+            docker compose ps --format "table {{.Name}}\t{{.Status}}"
+
+            # Check for unhealthy services
+            unhealthy=$(docker compose ps --format "{{.Name}}\t{{.Status}}" | grep -i unhealthy || true)
+            if [ -n "$unhealthy" ]; then
+              echo "⚠️  Unhealthy services detected:"
+              echo "$unhealthy"
+              exit 1
+            fi
+            echo "✅ All services healthy"
