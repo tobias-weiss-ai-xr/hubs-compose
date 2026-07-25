@@ -993,7 +993,7 @@ services:
         - CMD
         - curl
         - -fk
-        - https://localhost:8080
+        - http://localhost:8080
       start_period: 3m30s
     networks:
       default: null
