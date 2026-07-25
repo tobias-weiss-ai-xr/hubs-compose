@@ -27,14 +27,14 @@ echo "=== Deploying hubs-compose ==="
 
 if [ "$SKIP_GIT_PULL" = false ]; then
   echo "--- Pulling latest code ---"
-  git fetch origin
+  git fetch codeberg
   git checkout main
-  git pull origin main
+  git pull codeberg main
 
-  for sub in services/reticulum services/spoke services/hubs services/dialog; do
+  for sub in services/reticulum services/hubs services/dialog; do
     if [ -d "$sub/.git" ]; then
-      echo "Pulling $sub..."
-      git -C "$sub" pull origin master 2>/dev/null || true
+      echo "Pulling $sub from codeberg..."
+      git -C "$sub" pull codeberg master 2>/dev/null || true
     fi
   done
 fi

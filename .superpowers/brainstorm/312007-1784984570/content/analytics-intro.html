@@ -1,0 +1,44 @@
+<h2>Analytics Dashboard (Codon 24)</h2>
+<p class="subtitle">Real-time classroom analytics for chemistry VR labs</p>
+
+<div class="section">
+  <h3>Available Data</h3>
+  <p>Based on the systems we've built, these data sources are available:</p>
+  <ul style="text-align:left;display:inline-block;">
+    <li><strong>Quizzes</strong> — question, options, per-student answers, correct/incorrect</li>
+    <li><strong>Progress</strong> — per-student: element navigation, time spent, completion status</li>
+    <li><strong>Room sessions</strong> — active CCU, member counts (from existing hub_controller)</li>
+    <li><strong>Enrollments</strong> — teacher/student role assignments</li>
+    <li><strong>Annotations</strong> — student-added notes per element</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>First question: Who is this dashboard for?</h3>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="teacher" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Teacher Dashboard</h3>
+      <p>Real-time view: who's in the room, what they've completed, quiz scores, per-student progress. Shows heatmap of element visits.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Teacher + Student Dashboard</h3>
+      <p>Teacher sees all students. Students see their own stats: time spent, completed elements, quiz history, progress through worksheet.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="admin" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Admin Dashboard</h3>
+      <p>Cross-room analytics: aggregate across all rooms, per-class trends, usage stats over time. Less focus on real-time, more on historical.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:24px">Open http://localhost:64507 and click an option, then respond in the terminal.</p>
