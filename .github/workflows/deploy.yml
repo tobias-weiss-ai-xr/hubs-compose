@@ -25,7 +25,7 @@ jobs:
             set -e
             cd ${{ env.DEPLOY_DIR }}
 
-            # Ensure repo is cloned and on correct branch
+            # Ensure monorepo is cloned and on correct branch
             if [ ! -d .git ]; then
               git clone ${{ env.REPO_URL }} .
             fi
@@ -33,10 +33,15 @@ jobs:
             git checkout main
             git pull origin main
 
-            # Pull latest sub-repo changes
+            # Pull latest sub-repo changes from codeberg fork
             for sub in services/reticulum services/spoke services/hubs services/dialog; do
               if [ -d "$sub/.git" ]; then
-                git -C "$sub" pull origin master 2>/dev/null || true
+                remote="codeberg"
+                # Ensure the codeberg remote exists
+                if ! git -C "$sub" remote | grep -qx "$remote"; then
+                  git -C "$sub" remote add "$remote" "git@codeberg.org:graphwiz-ai/${sub#services/}.git"
+                fi
+                git -C "$sub" pull "$remote" master 2>/dev/null || true
               fi
             done
 
