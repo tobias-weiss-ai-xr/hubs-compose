@@ -1046,6 +1046,46 @@ services:
     networks:
       default: null
     restart: unless-stopped
+  node-exporter:
+    image: prom/node-exporter:latest
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --web.listen-address=:9110
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:9110/metrics
+      interval: 30s
+      start_period: 5s
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 9110
+        published: "9110"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /proc
+        target: /host/proc
+        read_only: true
+      - type: bind
+        source: /sys
+        target: /host/sys
+        read_only: true
+      - type: bind
+        source: /
+        target: /rootfs
+        read_only: true
+    platform: linux/amd64
   prometheus:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
