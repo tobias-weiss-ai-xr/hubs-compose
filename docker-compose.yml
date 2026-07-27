@@ -1215,9 +1215,10 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: "5432"
-      POSTGRES_DB: reticulum
+      POSTGRES_DB: ret_dev
       POSTGRES_USER: postgres
       DB_CREDENTIALS: postgres
+      BACKUP_DIR: /backups
     volumes:
       - type: bind
         source: /home/weiss/git/hubs-compose/backups

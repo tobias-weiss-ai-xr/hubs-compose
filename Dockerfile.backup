@@ -9,7 +9,7 @@ RUN apk add --no-cache \
     bash \
     && rm -rf /var/cache/apk/*
 
-# Copy scripts
+# Copy scripts from scripts directory
 COPY scripts/backup-db.sh /backup-db.sh
 COPY scripts/backup-entrypoint.sh /backup-entrypoint.sh
 RUN chmod +x /backup-db.sh /backup-entrypoint.sh
@@ -17,8 +17,8 @@ RUN chmod +x /backup-db.sh /backup-entrypoint.sh
 # Create required directories
 RUN mkdir -p /backups /var/log
 
-# Set up cron
-COPY crontab /etc/crontab
+# Set up cron - created in entrypoint instead
+# COPY crontab /etc/crontab
 
 # Run as root for cron
 USER root

@@ -14,3 +14,4 @@ erl_crash.dump
 .playwright-mcp/
 *.md.bak
 *.png.bak
+backups/

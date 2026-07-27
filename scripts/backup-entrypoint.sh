@@ -28,9 +28,10 @@ echo "Starting cron for database backups..."
 echo "Backups will be stored in: $BACKUP_DIR"
 echo "Logs available at: $LOG_FILE"
 
-# Copy backup script to path
-cp /scripts/backup-db.sh /backup-db.sh
-chmod +x /backup-db.sh
+# Copy backup script to path (already copied in Dockerfile from scripts/)
+# No longer needed since Dockerfile copies from scripts/
+# cp /scripts/backup-db.sh /backup-db.sh
+# chmod +x /backup-db.sh
 
-# Run cron in foreground
-exec cron -f
+# Run cron in foreground (Alpine uses crond)
+exec crond -f -n
