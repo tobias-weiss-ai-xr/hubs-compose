@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+FROM alpine:3.18
+
+# Install postgresql client and dependencies
+RUN apk add --no-cache \
+    postgresql14-client \
+    gzip \
+    cronie \
+    bash \
+    && rm -rf /var/cache/apk/*
+
+# Copy scripts
+COPY scripts/backup-db.sh /backup-db.sh
+COPY scripts/backup-entrypoint.sh /backup-entrypoint.sh
+RUN chmod +x /backup-db.sh /backup-entrypoint.sh
+
+# Create required directories
+RUN mkdir -p /backups /var/log
+
+# Set up cron
+COPY crontab /etc/crontab
+
+# Run as root for cron
+USER root
+
+# Entypoint
+ENTRYPOINT ["/backup-entrypoint.sh"]

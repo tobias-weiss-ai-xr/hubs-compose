@@ -2,6 +2,9 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+rule_files:
+  - /etc/prometheus/alert.rules
+
 scrape_configs:
   - job_name: "reticulum"
     scheme: https
@@ -12,3 +15,27 @@ scrape_configs:
       - targets: ["reticulum:4000"]
         labels:
           service: reticulum
+  
+  - job_name: "node-exporter"
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:9100"]
+        labels:
+          service: node-exporter
+  
+  - job_name: "dialog"
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["dialog:7000"]
+        labels:
+          service: dialog
+  
+  - job_name: "postgres"
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service: postgres

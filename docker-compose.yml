@@ -1051,7 +1051,9 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --web.console.libraries=/usr/share/prometheus/console_libraries
-      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.console.templates=/usr/share/prometheus/consules
+      - --web.enable-lifecycle
+      - --web.enable-admin-api
     healthcheck:
       test:
         - CMD
@@ -1076,10 +1078,17 @@ services:
         source: /home/weiss/git/hubs-compose/monitoring/prometheus.yml
         target: /etc/prometheus/prometheus.yml
         bind: {}
+      - type: bind
+        source: /home/weiss/git/hubs-compose/monitoring/alert.rules
+        target: /etc/prometheus/alert.rules
+        bind: {}
       - type: volume
         source: prometheus_data
         target: /prometheus
         volume: {}
+    depends_on:
+      db:
+        condition: service_healthy
   pse-vr:
     container_name: pse-vr
     image: hello-webxr:latest
@@ -1199,6 +1208,29 @@ services:
         source: /home/weiss/git/hubs-compose/services/spoke
         target: /code
         bind: {}
+  db-backup:
+    build:
+      context: /home/weiss/git/hubs-compose
+      dockerfile: Dockerfile.backup
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      POSTGRES_DB: reticulum
+      POSTGRES_USER: postgres
+      DB_CREDENTIALS: postgres
+    volumes:
+      - type: bind
+        source: /home/weiss/git/hubs-compose/backups
+        target: /backups
+      - type: bind
+        source: /home/weiss/git/hubs-compose/scripts
+        target: /scripts
+        read_only: true
+    networks:
+      default: null
+    restart: unless-stopped
+    profiles:
+      - backup
 networks:
   default:
     name: hubs-compose

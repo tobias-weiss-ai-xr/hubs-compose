@@ -1,0 +1,109 @@
+# Grafana alerts for hubs-compose monitoring
+# Load this in Grafana: Configuration -> Alerting -> Notification policies -> Add contact point
+
+# Alert groups
+groups:
+  - name: Hubs-Compose-Critical
+    orgId: 1
+    title: Critical Alerts
+    items:
+      - title: Service Down
+        condition: B
+        no_data_state: Alerting
+        exec_err_state: Alerting
+        for: 5m
+        annotations:
+          summary: "{{ $labels.service }} is down"
+          description: "Service {{ $labels.service }} has been down for more than 5 minutes"
+        labels:
+          severity: critical
+        is_paused: false
+        
+      - title: High Memory Usage
+        condition: C
+        no_data_state: NoData
+        exec_err_state: Alerting
+        for: 10m
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is at {{ $values.B.Value }}% (threshold: 90%)"
+        labels:
+          severity: warning
+        is_paused: false
+        
+      - title: High CPU Usage
+        condition: D
+        no_data_state: NoData
+        exec_err_state: Alerting
+        for: 10m
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is at {{ $values.B.Value }}% (threshold: 80%)"
+        labels:
+          severity: warning
+        is_paused: false
+        
+      - title: Database Connection Issues
+        condition: E
+        no_data_state: Alerting
+        exec_err_state: Alerting
+        for: 2m
+        annotations:
+          summary: "Database connection pool issues"
+          description: "High number of database connection errors: {{ $values.B.Value }}"
+        labels:
+          severity: critical
+        is_paused: false
+
+  - name: Hubs-Compose-Warnings
+    orgId: 1
+    title: Warning Alerts
+    items:
+      - title: High HTTP 5xx Rate
+        condition: F
+        no_data_state: NoData
+        exec_err_state: Alerting
+        for: 5m
+        annotations:
+          summary: "High 5xx error rate from {{ $labels.instance }}"
+          description: "5xx error rate is {{ $values.B.Value }}% (threshold: 5%)"
+        labels:
+          severity: warning
+        is_paused: false
+        
+      - title: Disk Space Low
+        condition: G
+        no_data_state: NoData
+        exec_err_state: Alerting
+        for: 1m
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is at {{ $values.B.Value }}% (threshold: 85%)"
+        labels:
+          severity: warning
+        is_paused: false
+
+# Contact points for notifications (configure in Grafana UI)
+# Example: Slack, Email, PagerDuty
+# - name: slack-alerts
+#   type: slack
+#   settings:
+#     url: "https://hooks.slack.com/services/XXX"
+#     title: "{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}"
+#     text: "{{ .CommonAnnotations.description }}"
+
+# Notification policies
+notification_policies:
+  - name: Critical Notifications
+    orgId: 1
+    receiver: Critical-Receivers
+    group_by: ['alertname', 'severity']
+    match:
+      severity: critical
+    
+  - name: Warning Notifications
+    orgId: 1
+    receiver: Warning-Receivers
+    group_by: ['alertname', 'severity']
+    match:
+      severity: warning

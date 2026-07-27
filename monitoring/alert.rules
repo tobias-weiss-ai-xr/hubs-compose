@@ -1,0 +1,74 @@
+groups:
+- name: hubs-compose-alerts
+  rules:
+
+  # Service health alerts
+  - alert: ServiceDown
+    expr: up == 0
+    for: 5m
+    labels:
+      severity: critical
+      service: "{{ $labels.service }}"
+    annotations:
+      summary: "Service {{ $labels.service }} is down"
+      description: "{{ $labels.service }} has been down for more than 5 minutes"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage is at {{ $value }}% (threshold: 90%)"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage is at {{ $value }}% (threshold: 80%)"
+
+  # High disk usage
+  - alert: HighDiskUsage
+    expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100 < 15
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}"
+      description: "Free disk space is at {{ $value }}% (threshold: 15%)"
+
+  # PostgreSQL connection issues
+  - alert: PostgresConnectionIssues
+    expr: rate(pg_stat_activity_count{datname="reticulum"}[5m]) < 1
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "No active PostgreSQL connections to reticulum database"
+      description: "No active connections detected for 2 minutes"
+
+  # HTTP 5xx errors (if we have metrics for this)
+  - alert: HighHTTP5xxRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High 5xx error rate from {{ $labels.instance }}"
+      description: "5xx error rate is {{ $value }}% (threshold: 5%)"
+
+  # Reticulum room creation failures
+  - alert: RoomCreationFailures
+    expr: rate(ret_room_creation_failures_total[5m]) > 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Room creation failures detected in reticulum"
+      description: "{{ $value }} room creation failures in the last 5 minutes"
