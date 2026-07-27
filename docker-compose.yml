@@ -1083,6 +1083,16 @@ services:
   pse-vr:
     container_name: pse-vr
     image: hello-webxr:latest
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:80
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       default: null
     ports:

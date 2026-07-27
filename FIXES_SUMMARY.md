@@ -110,6 +110,14 @@ docker compose up -d --force-recreate postgrest coturn
 **Fix:** Changed `https://` → `http://` in `dockerfiles/spoke.Dockerfile`
 **Result:** Container now shows `(healthy)` status
 
+### 11. Hubs-Admin Healthcheck Failing (HTTPS → HTTP mismatch)
+**Status:** Fixed
+**Root Cause:** Webpack devServer configured for HTTPS but serving HTTP; docker-compose healthcheck used `https://localhost:8989/admin.html`
+**Fix:** 
+- `services/hubs/admin/webpack.config.js` - Changed `devServer.server.type` from `"https"` to `"http"`, removed `options: createHTTPSConfig()`
+- `docker-compose.yml` - Changed healthcheck from `https://localhost:8989/admin.html` to `http://localhost:8989/admin.html`
+**Result:** Container now shows `(healthy)` status after restart
+
 ### 11. Scene GLB Files Returning Wrong Content-Type (404 in Viewport)
 **Status:** Fixed
 **Root Cause:** 9 scene model files stored with `content_type: application/octet-stream` instead of `model/gltf-binary`. Three.js/A-Frame in the browser viewport fails to load models with wrong MIME type.
