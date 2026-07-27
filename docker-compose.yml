@@ -1219,6 +1219,15 @@ services:
       POSTGRES_USER: postgres
       DB_CREDENTIALS: postgres
       BACKUP_DIR: /backups
+    healthcheck:
+      test:
+        - CMD
+        - test
+        - -x
+        - /backup-db.sh
+      interval: 30s
+      retries: 3
+      start_period: 5s
     volumes:
       - type: bind
         source: /home/weiss/git/hubs-compose/backups
