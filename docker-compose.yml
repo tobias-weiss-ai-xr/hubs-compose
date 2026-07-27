@@ -958,7 +958,7 @@ services:
         - CMD
         - curl
         - -fk
-        - https://localhost:8989/admin.html
+        - http://localhost:8989/admin.html
     networks:
       default: null
     platform: linux/amd64
