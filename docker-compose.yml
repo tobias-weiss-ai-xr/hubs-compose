@@ -951,8 +951,14 @@ services:
       - --
       - --allowed-hosts
       - all
+    depends_on:
+      reticulum:
+        condition: service_started
+        required: true
     environment:
       INTERNAL_HOSTNAME: hubs-admin
+      # Use localhost in host network mode
+      HUBS_SERVER: "http://127.0.0.1:4001"
     healthcheck:
       test:
         - CMD
@@ -985,11 +991,17 @@ services:
       - --
       - --allowed-hosts
       - all
+    depends_on:
+      reticulum:
+        condition: service_started
+        required: true
     environment:
       HUBS_HOST: hubs.chemie-lernen.org
       INTERNAL_HOSTNAME: hubs-client
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
+      # Use localhost in host network mode
+      RETICULUM_SERVER: "http://127.0.0.1:4001"
     healthcheck:
       test:
         - CMD
@@ -1020,6 +1032,10 @@ services:
       - sh
       - -c
       - "chown -R node:node /code/node_modules/.cache/storybook 2>/dev/null; npm run storybook"
+    depends_on:
+      hubs-client:
+        condition: service_started
+        required: false
     healthcheck:
       test:
         - CMD
@@ -1045,6 +1061,20 @@ services:
     build:
       context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/postgrest.Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:3000/
+      interval: 30s
+      start_period: 15s
     networks:
       default: null
     restart: unless-stopped
@@ -1231,11 +1261,25 @@ services:
     command:
       - yarn
       - start
+    depends_on:
+      reticulum:
+        condition: service_started
+        required: true
     environment:
       BASE_ASSETS_PATH: /spoke/
-      CORS_PROXY_SERVER: hubs.chemie-lernen.org:4000
+      CORS_PROXY_SERVER: "127.0.0.1:4002"
       INTERNAL_HOSTNAME: spoke
       ROUTER_BASE_PATH: /spoke
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:9090
+      interval: 30s
+      start_period: 30s
+      timeout: 5s
+      retries: 3
     networks:
       default: null
     platform: linux/amd64
