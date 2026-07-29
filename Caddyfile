@@ -7,13 +7,10 @@ cloud.graphwiz.ai {
     }
 }
 
+# hubs.chemie-lernen.org: Use host IP to reach host-network containers
 hubs.chemie-lernen.org {
-    # Use internal certificate (self-signed) for development
-    tls internal {
-        alpn http/1.1
-    }
-    
-    reverse_proxy 127.0.0.1:4002 {
+    # Use the actual host IP since hubs-compose services are in host network mode
+    reverse_proxy 192.168.0.42:4002 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
