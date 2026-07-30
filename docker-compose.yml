@@ -957,8 +957,8 @@ services:
         required: true
     environment:
       INTERNAL_HOSTNAME: hubs-admin
-      # Use localhost in host network mode
-      HUBS_SERVER: "http://127.0.0.1:4001"
+      # Use container name on Docker network
+      HUBS_SERVER: "http://reticulum:4001"
     healthcheck:
       test:
         - CMD
@@ -1000,8 +1000,8 @@ services:
       INTERNAL_HOSTNAME: hubs-client
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
-      # Use localhost in host network mode
-      RETICULUM_SERVER: "http://127.0.0.1:4001"
+      # Use container name on Docker network
+      RETICULUM_SERVER: "http://reticulum:4001"
     healthcheck:
       test:
         - CMD
@@ -1215,7 +1215,7 @@ services:
         - --no-verbose
         - --tries=1
         - --spider
-        - https://127.0.0.1:4000/stream-offline.png
+        - https://reticulum:4000/stream-offline.png
       interval: 30s
       start_period: 1m0s
     networks:
@@ -1257,7 +1257,7 @@ services:
         required: true
     environment:
       BASE_ASSETS_PATH: /spoke/
-      CORS_PROXY_SERVER: "127.0.0.1:4002"
+      CORS_PROXY_SERVER: "reticulum:4002"
       INTERNAL_HOSTNAME: spoke
       ROUTER_BASE_PATH: /spoke
     healthcheck:
