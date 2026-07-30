@@ -1,30 +1,14 @@
 cloud.graphwiz.ai {
-    reverse_proxy 127.0.0.1:9200 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+    reverse_proxy 127.0.0.1:9200
 }
 
-# hubs.chemie-lernen.org: Use host IP to reach host-network containers
 hubs.chemie-lernen.org {
-    # Use the actual host IP since hubs-compose services are in host network mode
-    reverse_proxy 192.168.0.42:4002 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto https
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-Port {server_port}
+    tls /etc/ssl/certs/hubs-chemie-lernen-org.crt /etc/ssl/certs/hubs-chemie-lernen-org.key
+    reverse_proxy 172.27.0.1:4002 {
+        header_up Host hubs.chemie-lernen.org
     }
 }
 
 editor.cloud.graphwiz.ai {
-    reverse_proxy 127.0.0.1:8080 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-    }
+    reverse_proxy 127.0.0.1:8080
 }
