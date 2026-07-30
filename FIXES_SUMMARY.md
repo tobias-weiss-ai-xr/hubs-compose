@@ -434,3 +434,71 @@ curl https://hubs.chemie-lernen.org/
 - **Ansible Role:** `/home/weiss/git/ansible/roles/hubs_compose/`
 - **Original Hubs:** https://github.com/mozilla/hubs
 - **Mozilla Hubs Compose:** https://github.com/mozilla/hubs-compose
+
+---
+
+## July 30, 2026: Root Cause Found - DNS Resolution Issue
+
+### Issue #1: All Services Resolved to Public IP
+**Status:** IDENTIFIED
+**Root Cause:** hubs.chemie-lernen.org DNS resolves to 178.254.2.90 (public server), NOT to 192.168.0.42 (local development server)
+
+**Impact:** 
+- All testing was done against the WRONG server
+- Caddy configuration was correct, but tests went to public IP
+- Explains why assets returned 500 through Caddy (wrong server entirely)
+
+**Fix:** 
+- Add `192.168.0.42 hubs.chemie-lernen.org` to /etc/hosts for local testing
+- OR deploy to public server with proper DNS
+
+### Issue #2: Caddy Certificate Configuration
+**Status:** FIXED
+**Changes:**
+- Generated self-signed certificate for hubs.chemie-lernen.org
+- Configured Caddy to use manual certificate with `tls cert.crt cert.key` directive
+- Disabled Let's Encrypt ACME challenges (rate-limited)
+
+**Files:**
+- `/home/weiss/git/hubs-compose/Caddyfile` - Now in hubs-compose repo
+- `/home/weiss/git/hubs-compose/certs/hubs-chemie-lernen-org.crt`
+- `/home/weiss/git/hubs-compose/certs/hubs-chemie-lernen-org.key`
+
+### Issue #3: Caddy Container Networking
+**Status:** FIXED  
+**Root Cause:** Caddy container (on opencloud-compose_opencloud-net) couldn't reach host-network containers via 127.0.0.1
+**Fix:** Use Docker gateway IP 172.27.0.1 to reach host-network containers from other networks
+
+**Configuration:**
+```caddyfile
+hubs.chemie-lernen.org {
+    tls /etc/ssl/certs/hubs-chemie-lernen-org.crt /etc/ssl/certs/hubs-chemie-lernen-org.key
+    reverse_proxy 172.27.0.1:4002 {
+        header_up Host hubs.chemie-lernen.org
+    }
+}
+```
+
+### Fixes Deployed
+1. ✅ Moved Caddyfile to hubs-compose repository (version-controlled)
+2. ✅ Added self-signed certificates to hubs-compose/certs/
+3. ✅ Fixed Caddyfile syntax for Caddy v2
+4. ✅ Added healthchecks for postgrest and spoke services
+5. ✅ Added depends_on for proper service ordering
+6. ✅ Fixed CORS_PROXY_SERVER and RETICULUM_SERVER environment variables
+7. ✅ Standardized webpack to use HTTP instead of HTTPS
+8. ✅ Updated reticulum configuration for HTTP connections
+
+### Verification (with /etc/hosts entry)
+```bash
+# Add to /etc/hosts
+echo "192.168.0.42 hubs.chemie-lernen.org" | sudo tee -a /etc/hosts
+
+# Test
+curl -sk "https://hubs.chemie-lernen.org/"                          -> 200
+curl -sk "https://hubs.chemie-lernen.org/assets/..."                -> 200  
+curl -sk "https://hubs.chemie-lernen.org/api/v1/hubs"               -> 200
+openssl s_client -connect hubs.chemie-lernen.org:443 -servername hubs.chemie-lernen.org | openssl x509 -noout -subject
+                                                                      -> CN=hubs.chemie-lernen.org
+```
+
