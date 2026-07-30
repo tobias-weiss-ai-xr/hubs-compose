@@ -1276,7 +1276,7 @@ services:
     ports:
       - mode: ingress
         target: 9090
-        published: "9090"
+        published: "9091"
         protocol: tcp
     restart: unless-stopped
     volumes:
