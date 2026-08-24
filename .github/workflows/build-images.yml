@@ -24,15 +24,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - service: reticulum
-            dockerfile: services/reticulum/TurkeyDockerfile
-            target: dev
           - service: spoke
             dockerfile: dockerfiles/spoke.Dockerfile
           - service: hubs
             dockerfile: dockerfiles/hubs.Dockerfile
-          - service: dialog
-            dockerfile: dockerfiles/dialog.Dockerfile
           - service: postgrest
             dockerfile: dockerfiles/postgrest.Dockerfile
           - service: coturn
