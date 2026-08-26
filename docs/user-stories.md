@@ -31,6 +31,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | 🚧 **built** | Feature exists in the codebase/compose stack but is not (yet) covered by an automated test on the live domain. | Reported as skipped with a note; manual check recorded. |
 | 🚧 **built\*** | Feature comes from **upstream Mozilla Hubs** (chat, reactions, media, moderation, accounts) or exists as tooling, but **live behavior is unverified** on this deployment. | Reported as skipped with a note until live-verified. |
 | 🧪 **service-tested** | Feature is exercised by **Reticulum `mix test`** suites in `services/reticulum/test/` (run inside the `hubs-compose-reticulum` container). The live public endpoint may still be unverified. | Service tests must pass (`mix test`); live check may remain skipped. |
+| ⚠️ **known defect** | Feature is **live-broken**; an automated harness (`e2e/epics/ep-04-room-entry.spec.ts`) reproduces the defect and is **intentionally RED** until the platform is fixed. | Harness reports failure (bug present) → must turn green after the fix. |
 | 📋 **planned** | Roadmap only — no implementation yet. | Reported as skipped. |
 
 ---
@@ -197,10 +198,11 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-016: Room entry lands in 3D client
 **As a** student **I want** clicking a room link to load the Hubs client **so that** I enter the 3D classroom.
-- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** 🚧 built
+- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** ⚠️ known defect — live client renders `HomePage` for every path; URL changes (room created/visited) but the room client never loads
 - **Acceptance criteria:**
   - Room URL serves the client shell (HTTP 200, `App` title) rather than an error.
-- **Test:** none yet (requires a real room id)
+  - Visiting `/<hub_id>/<slug>` renders the room client (A-Frame canvas / iframe), not the landing page.
+- **Test:** `e2e/epics/ep-04-room-entry.spec.ts` (US-016 + US-012) — RED until fixed. Reproduced 2026-08-26: direct room URL `https://hubs.chemie-lernen.org/5Vnt5wx/wasserstoff-raum` and created room `/bW3gyXD/elegant-striking-cosmos` both render `main.HomePage__home-page__x0clY`, no canvas/iframe, no console errors.
 
 ### US-017: Dashboard lists element rooms
 **As a** teacher **I want** the dashboard to enumerate rooms linked to the 118 elements **so that** I can spot which elements have ready classrooms.
@@ -211,10 +213,11 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-018: LiveTiles/room state visible
 **As a** teacher **I want** each room to show name and presence state **so that** I can see who is where.
-- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** 🚧 built
+- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** ⚠️ known defect — landing-page images (logo, hero screenshot) render with `src=""`
 - **Acceptance criteria:**
   - Room cards show name and member counts.
-- **Test:** none yet
+  - Landing/room images have a real source and decode (no empty `src`).
+- **Test:** `e2e/epics/ep-04-room-entry.spec.ts` (US-018) — RED until fixed. Reproduced 2026-08-26: 3 of 3 images on `/` have `src=""` (header logo, `HomePage__logo-container`, hero "Screenshot of hubs.chemie-lernen.org").
 
 ### US-019: Rooms listing consistent over HTTPS
 **As a** student **I want** rooms to enumerate over TLS **so that** I browse safely from any network.
@@ -2000,7 +2003,8 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | US-017 (dashboard lists element rooms) | 🧪 service-tested | `test/ret/hub_chemistry_test.exs` — pagination, entry-mode filter, newest-first ordering (mix test) |
 | US-024 (118-element table breadth), US-027 (unknown symbol) | ✅ tested (live) | live `e2e/epics/ep-03-element-data.spec.ts` |
 | US-013, US-021, US-027 (element API) | ✅ tested (live) **+** 🧪 service-tested | live `e2e/epics/ep-02-chemistry-content.spec.ts` + `hub_controller_chemistry_test.exs` |
-| US-003…US-010, US-012, US-015…US-018, US-024, EP-06 stories | 🚧 built | manual / none yet |
+| US-016 (room entry), US-012→US-016 (create→enter), US-018 (images) | ⚠️ known defect — RED harness | `e2e/epics/ep-04-room-entry.spec.ts` (intentionally failing until platform fix) |
+| US-003…US-010, US-012, US-015, US-017, US-024, EP-06 stories | 🚧 built / 🧪 / ⚠️ as noted | see rows above; manual / none yet |
 | Remaining EP-03/04…21 and EP-26…30 (except noted) | 📋 planned | skipped reporting |
 
 ## Verified Findings & Known State
@@ -2016,6 +2020,17 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 - **Service test reconciliation (2026-08-26):** the ~28 stale tests written against
   stock-Hubs 401 behavior were updated to assert the real fork behavior (200-empty for
   guests) or made meaningful (hub non-owner test now authenticates a second account).
+- **Room entry defect (US-016, reproduced 2026-08-26 via `ep-04-room-entry.spec.ts`):**
+  the served Hubs client renders `main.HomePage__home-page__x0clY` for **every** path.
+  Direct room URLs (`/5Vnt5wx/wasserstoff-raum`) and freshly created rooms
+  (`/bW3gyXD/elegant-striking-cosmos` after "Create Room") change the URL but never load
+  the room client: no A-Frame canvas, no iframe, no console errors. Room creation itself
+  works (element API lists the new hubs; slug/hub_id are correct). Root cause is
+  client-side (router/config), not the API.
+- **Image defect (US-018, reproduced 2026-08-26):** all 3 images on `/` render with
+  `src=""` (header logo, `HomePage__logo-container`, hero "Screenshot of
+  hubs.chemie-lernen.org") — branding/image config is not fed to the client, so nothing
+  is displayed.
   Also fixed `HubRoleMembership` inserts that omitted the fork's required `role` column,
   and tagged the health-error test `dev_only` (it needs a failing downstream). Full suite:
   `425 tests, 0 failures, 4 excluded`. Story suites (`room_access_*`,

@@ -21,7 +21,7 @@ SPEC_DIR = os.path.join(ROOT, "e2e", "epics")          # Playwright live tests
 SERVICE_TEST_DIR = os.path.join(ROOT, "services", "reticulum", "test")  # Elixir mix tests
 
 ID_RE = re.compile(r"US-(\d{3})")
-STATUS_RE = re.compile(r"\*\*Status:.*?([✅🚧📋])\s*(?:tested|built|planned)")
+STATUS_RE = re.compile(r"\*\*Status:.*?(✅|🧪|🚧|📋|⚠️)\s*(?:tested|built|planned|known defect)")
 # All US-0xx ids inside a test( ... ) title — supports multi-id titles like US-013 US-021 US-097.
 TEST_LINE_RE = re.compile(r"\btest\(")
 ID_IN_LINE_RE = re.compile(r"US-(\d{3})")
@@ -95,15 +95,15 @@ def main():
     stories = parse_stories()
 
     problems = []
-    # Every tested story (✅ live-tested or 🧪 service-tested) must have a test reference.
+    # Every tracked story (✅ live-tested, 🧪 service-tested, ⚠️ known defect w/ harness) must have a test reference.
     for sid, info in sorted(stories.items(), key=lambda kv: int(kv[0])):
-        tested = info["status"] in ("✅", "🧪")
+        tested = info["status"] in ("✅", "🧪", "⚠️")
         has_test = sid in spec_ids
         status_label = info["status"] if info["status"] else "UNKNOWN"
         if tested and not has_test:
-            problems.append(f"US-{sid} marked {status_label} tested but has NO test reference (e2e/epics or services/reticulum/test)")
+            problems.append(f"US-{sid} marked {status_label} but has NO test reference (e2e/epics or services/reticulum/test)")
         elif not tested and has_test:
-            problems.append(f"US-{sid} ({status_label}) has a test but is not marked ✅/🧪 tested — update docs/user-stories.md")
+            problems.append(f"US-{sid} ({status_label}) has a test but is not marked ✅/🧪/⚠️ tested — update docs/user-stories.md")
 
     # Tests that reference unknown stories.
     known = set(stories)

@@ -178,7 +178,14 @@ e2e/
     ep-01-auth-rooms.spec.ts            # US-001, US-011, US-019
     ep-02-chemistry-content.spec.ts     # US-013, US-014, US-021, US-027, US-097, US-101
     ep-03-element-data.spec.ts          # US-024 (table breadth), US-027 (unknown symbol)
+    ep-04-room-entry.spec.ts            # US-012/016 room entry + US-018 images — ⚠️ KNOWN
+                                        # DEFECTS: intentionally RED until the client renders
+                                        # rooms & images (see docs/user-stories.md)
 ```
+
+> ⚠️ `ep-04-room-entry.spec.ts` currently FAILS on purpose: it pins two live defects
+> (room entry never leaves the landing page; landing images render with `src=""`). Run
+> `npm run test:live` after any client fix — these tests must turn green.
 
 Every live test is named with its story id (e.g. `test("US-011 …")`) so failures trace
 straight back to the requirement.
