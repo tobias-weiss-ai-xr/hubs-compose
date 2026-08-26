@@ -2007,11 +2007,17 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
   `:auth_required` endpoints (`/rooms/token`, `/rooms/classroom`, assets, scenes,
   projects, media search) return **HTTP 200** with an empty `{suggestions, meta, entries}`
   payload instead of a 401 — implemented in `lib/ret_web/auth_error_handler.ex`
-  (commit `e10098c0`, "prevents Hubs frontend crash on invalid auth tokens").
-- **Consequence for the test suite:** ~28 pre-existing service tests (written against
-  stock-Hubs 401 behavior) fail on this deliberate behavior. Story-related suites
-  (`room_access_*`, `hub_controller_chemistry`, `chemistry`, `rate_limit`) pass 62/62
-  and encode the real guest-200 behavior for the token/classroom endpoints.
+  (commit `e10098c0`, "prevents Hubs frontend crash on invalid auth tokens"). The same
+  philosophy applies to cross-user media search (`media_search_controller.ex`, commit
+  `f005eb38`) and hub updates (authenticated non-owners still get 401 "You cannot update
+  this hub").
+- **Service test reconciliation (2026-08-26):** the ~28 stale tests written against
+  stock-Hubs 401 behavior were updated to assert the real fork behavior (200-empty for
+  guests) or made meaningful (hub non-owner test now authenticates a second account).
+  Also fixed `HubRoleMembership` inserts that omitted the fork's required `role` column,
+  and tagged the health-error test `dev_only` (it needs a failing downstream). Full suite:
+  `425 tests, 0 failures, 4 excluded`. Story suites (`room_access_*`,
+  `hub_controller_chemistry`, `chemistry`, `rate_limit`) pass 62/62.
 - **Live behavior observed 2026-08-26:** `POST /api/v1/rooms/token` is not reachable on
   the public domain (404); room entry (`/rooms/:id/join`) is protected by RoomAccess
   (403 without token).
