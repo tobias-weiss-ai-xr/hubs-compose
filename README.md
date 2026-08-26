@@ -136,6 +136,44 @@ cd e2e && npx playwright test --reporter=list
 k6 run e2e/load-test.js
 ```
 
+### User Stories & Live Tests
+
+User epics and user stories covering the whole roadmap live in
+[`docs/user-stories.md`](docs/user-stories.md) (21 epics, `US-001…US-165`). Each story
+carries a status: `✅ tested`, `🚧 built`, or `📋 planned`.
+
+Tests only exist for stories whose features are **already live** on the production
+endpoint `https://hubs.chemie-lernen.org`. They run against the live domain — no local
+stack boot needed:
+
+```bash
+cd e2e && npm run test:live
+```
+
+Suite layout:
+
+```
+e2e/
+  playwright.live.config.ts              # live-domain config (strict TLS)
+  epics/
+    ep-01-auth-rooms.spec.ts            # US-001, US-011, US-019
+    ep-02-chemistry-content.spec.ts     # US-013, US-014, US-021, US-027, US-097, US-101
+```
+
+Every live test is named with its story id (e.g. `test("US-011 …")`) so failures trace
+straight back to the requirement.
+
+**Traceability check** — verifies that `✅ tested` stories actually have tests and that
+no stale tests linger on unmarked stories:
+
+```bash
+python3 scripts/check-story-tests.py            # informational
+python3 scripts/check-story-tests.py --strict   # fail on mismatch (CI)
+```
+
+To mark a newly covered feature: flip the story status to `✅ tested`, add the `US-0xx`
+test to the relevant `e2e/epics/*.spec.ts`, and re-run both the suite and the check.
+
 ## Configuration
 
 Key environment variables (see `.env.example`):
