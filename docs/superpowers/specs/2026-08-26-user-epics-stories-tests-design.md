@@ -43,11 +43,12 @@ Tests target this live domain directly. No local stack boot required for the tes
 
 ---
 
-## 3. Epic Map (EP-01 … EP-21) — whole roadmap
+## 3. Epic Map (EP-01 … EP-30) — whole roadmap
 
 Epics are finer-grained per functional concern while keeping full traceability to
-roadmap sprints and codons. 21 epics replace the earlier 11-epic sprint-aligned draft
-(user request: more epics, more stories).
+roadmap sprints and codons. 30 epics (21 functional + 9 platform-capability epics
+EP-22…EP-30 covering communication, media sharing, moderation, accounts, collaboration,
+notifications, compliance, integration ecosystem, and quality engineering).
 
 | Epic | Title | Roadmap | Codons |
 |---|---|---|---|

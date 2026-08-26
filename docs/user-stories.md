@@ -29,6 +29,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 |---|---|---|
 | ✅ **tested** | Feature is live on `hubs.chemie-lernen.org` and covered by an automated test that passes. | Test runs and must pass. |
 | 🚧 **built** | Feature exists in the codebase/compose stack but is not (yet) covered by an automated test on the live domain. | Reported as skipped with a note; manual check recorded. |
+| 🚧 **built\*** | Feature comes from **upstream Mozilla Hubs** (chat, reactions, media, moderation, accounts) or exists as tooling, but **live behavior is unverified** on this deployment. | Reported as skipped with a note until live-verified. |
 | 📋 **planned** | Roadmap only — no implementation yet. | Reported as skipped. |
 
 ---
@@ -58,6 +59,15 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | EP-19 | LMS Integration | Sprint 11 | 42–45 | US-142…US-149 |
 | EP-20 | Mobile & Cross-Platform | Sprint 12 | 46–49 | US-150…US-157 |
 | EP-21 | Launch & Operations | Sprint 13 | 50–53 | US-158…US-165 |
+| EP-22 | Communication & Social Presence | (upstream Hubs) | — | US-166…US-174 |
+| EP-23 | Media & Content Sharing | (upstream Hubs) | — | US-175…US-183 |
+| EP-24 | Moderation & Safety | (upstream Hubs) | — | US-184…US-191 |
+| EP-25 | Accounts & Profiles | (upstream Hubs) | — | US-192…US-200 |
+| EP-26 | In-Room Collaboration & Breakout | (new) | — | US-201…US-208 |
+| EP-27 | Notifications & Scheduling | (new) | — | US-209…US-216 |
+| EP-28 | Data Protection & Compliance | (new) | — | US-217…US-225 |
+| EP-29 | Integration & Developer Ecosystem | (new) | — | US-226…US-233 |
+| EP-30 | Quality Engineering | (new) | — | US-234…US-241 |
 
 ---
 
@@ -1370,6 +1380,603 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ---
 
+---
+
+## EP-22 — Communication & Social Presence
+
+> **Goal:** *As a student, I can talk, chat, and react with my class so that the VR
+> classroom feels like a real classroom.*
+
+### US-166: In-room text chat
+**As a** student **I want** a text chat in the room **so that** I can ask/share without voice.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Chat panel opens, messages send, and appear for participants.
+- **Test:** none yet
+
+### US-167: Emoji reactions
+**As a** student **I want** quick emoji reactions **so that** I can respond without typing.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Selecting an emoji broadcasts it to the room.
+- **Test:** none yet
+
+### US-168: Presence indicator
+**As a** student **I want** to see who is in the room **so that** I know my classmates are present.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Member list/presence updates as people join and leave.
+- **Test:** none yet
+
+### US-169: Display name near avatar
+**As a** student **I want** my name shown near my avatar **so that** people know who I am.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Name label renders and updates when renamed.
+- **Test:** none yet
+
+### US-170: Teacher↔student private messaging
+**As a** teacher **I want** to message a single student privately **so that** I can help discreetly.
+- **Epic:** EP-22 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Private DM visible only to the two participants.
+- **Test:** skipped (planned)
+
+### US-171: Chat history persisted
+**As a** student **I want** chat available after refresh **so that** I don't lose class Q&A.
+- **Epic:** EP-22 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Chat history persists across sessions.
+- **Test:** skipped (planned)
+
+### US-172: Teacher can disable/clear chat
+**As a** teacher **I want** to clear or disable chat **so that** I keep focus.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs moderation) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Chat pause/clear applies room-wide.
+- **Test:** none yet
+
+### US-173: Spatial voice via Dialog (SFU)
+**As a** student **I want** voice communication through the WebRTC media server **so that** I can talk live in the room.
+- **Epic:** EP-22 · **Codons:** 02 (Dialog) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Audio connects via Dialog and participants hear each other.
+- **Test:** none yet (requires multi-user media session)
+
+### US-174: Microphone/audio controls
+**As a** student **I want** to mute/unmute and adjust audio **so that** I control what is heard.
+- **Epic:** EP-22 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Mute state works and is reflected for others.
+- **Test:** none yet
+
+---
+
+## EP-23 — Media & Content Sharing
+
+> **Goal:** *As a teacher or student, I can share media in the room so that lessons are
+> vivid and collaborative.*
+
+### US-175: Share screen in room
+**As a** teacher **I want** to share my screen **so that** students see exactly what I show.
+- **Epic:** EP-23 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Screen sharing appears to room participants (with permission).
+- **Test:** none yet (needs media session)
+
+### US-176: Share images
+**As a** student **I want** to share an image into the room **so that** I can show visuals.
+- **Epic:** EP-23 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Image upload renders in the shared space.
+- **Test:** none yet
+
+### US-177: Share video (YouTube/Vimeo)
+**As a** teacher **I want** to share a video link **so that** I can play instructional video.
+- **Epic:** EP-23 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Supported video URLs play in-room.
+- **Test:** none yet
+
+### US-178: Embed 3D models (GLB)
+**As a** teacher **I want** to embed 3D models **so that** chemistry objects can be inspected in VR.
+- **Epic:** EP-23 · **Codons:** 30 (media pipeline) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - GLB model loads and is grabbable in the room.
+- **Test:** none yet
+
+### US-179: Share web links as media
+**As a** student **I want** to drop a URL into the room **so that** web content can be shared.
+- **Epic:** EP-23 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - URL media tiles appear and open on click.
+- **Test:** none yet
+
+### US-180: Teacher controls what's sharable
+**As a** teacher **I want** to restrict media sharing in my room **so that** content stays appropriate.
+- **Epic:** EP-23 · **Codons:** — (upstream Hubs moderation) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Sharing permissions apply room-wide.
+- **Test:** none yet
+
+### US-181: Media within room permission scope
+**As a** student **I want** shared media to respect room access rules **so that** protected rooms stay private.
+- **Epic:** EP-23 · **Codons:** 07–09 · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Only authorized room members can access room media.
+- **Test:** none yet
+
+### US-182: Media persists between sessions
+**As a** teacher **I want** room media to remain after the session **so that** the room is ready next time.
+- **Epic:** EP-23 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Placed media survives room restart (or is clearly ephemeral by config).
+- **Test:** skipped (planned)
+
+### US-183: Content safety guidance
+**As a** student **I want** safe sharing defaults (no autoplay surprises) **so that** I'm not startled.
+- **Epic:** EP-23 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Media requires explicit consent for playback where needed.
+- **Test:** skipped (planned)
+
+---
+
+## EP-24 — Moderation & Safety
+
+> **Goal:** *As a teacher, I can keep the classroom safe and respectful so that all
+> students feel secure.*
+
+### US-184: Mute a student
+**As a** teacher **I want** to mute an individual student **so that** disruptions stop.
+- **Epic:** EP-24 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Muted student can no longer transmit audio until unmuted.
+- **Test:** none yet (needs media session)
+
+### US-185: Eject a student from the room
+**As a** teacher **I want** to kick a student out of the room **so that** I can remove troublemakers.
+- **Epic:** EP-24 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Ejected student leaves and cannot instantly rejoin.
+- **Test:** none yet
+
+### US-186: Ban a user from a room
+**As a** teacher **I want** to ban a user **so that** they can't return.
+- **Epic:** EP-24 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Banned user is refused entry.
+- **Test:** none yet
+
+### US-187: Rename/remove inappropriate name or avatar
+**As a** teacher **I want** to rename or hide an inappropriate name/avatar **so that** the room stays decent.
+- **Epic:** EP-24 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Renamed user's name updates everywhere.
+- **Test:** none yet
+
+### US-188: Report an abusive user
+**As a** student **I want** to report someone to the teacher **so that** abuse is actionable.
+- **Epic:** EP-24 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Report reaches the teacher with context.
+- **Test:** skipped (planned)
+
+### US-189: Anonymous reporting
+**As a** student **I want** reports not to expose me **so that** I feel safe reporting.
+- **Epic:** EP-24 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Reporter identity is hidden from the reported user.
+- **Test:** skipped (planned)
+
+### US-190: Room permission presets
+**As a** teacher **I want** permission presets (collaborative/lecture/demo) **so that** setting up a room is one click.
+- **Epic:** EP-24 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Preset applies a sensible permission bundle.
+- **Test:** skipped (planned)
+
+### US-191: Moderation audit log
+**As a** teacher **I want** a log of moderation actions **so that** I can review what happened.
+- **Epic:** EP-24 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Mute/kick/ban actions are timestamped and visible to the teacher.
+- **Test:** skipped (planned)
+
+---
+
+## EP-25 — Accounts & Profiles
+
+> **Goal:** *As a user, I can make the platform mine — name, avatar, and settings — and
+> control my data.*
+
+### US-192: Set display name
+**As a** student **I want** to set my display name **so that** classmates recognize me.
+- **Epic:** EP-25 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Name persists and is shown in rooms.
+- **Test:** none yet
+
+### US-193: Choose avatar
+**As a** student **I want** to pick my avatar **so that** I express myself safely.
+- **Epic:** EP-25 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Selected avatar persists across sessions.
+- **Test:** none yet
+
+### US-194: Account settings (language, accessibility, privacy)
+**As a** student **I want** settings for language, accessibility, and privacy **so that** the platform fits me.
+- **Epic:** EP-25 · **Codons:** 34–35 · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Settings persist and take effect.
+- **Test:** none yet
+
+### US-195: Session persistence
+**As a** student **I want** to stay signed in across visits **so that** I don't log in every lesson.
+- **Epic:** EP-25 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Session survives reload/fresh visit.
+- **Test:** none yet
+
+### US-196: Profile picture
+**As a** teacher **I want** a profile picture **so that** students recognize me.
+- **Epic:** EP-25 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Uploaded picture displays in presence/avatar contexts.
+- **Test:** skipped (planned)
+
+### US-197: Student progress on profile
+**As a** student **I want** a profile view of my explored elements and scores **so that** I can track myself.
+- **Epic:** EP-25 · **Codons:** 23 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Profile shows progress summary from progress API.
+- **Test:** skipped (planned)
+
+### US-198: Teacher profile with class overview
+**As a** teacher **I want** a profile overview of my classes **so that** everything is one click away.
+- **Epic:** EP-25 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Profile links to classes/dashboards.
+- **Test:** skipped (planned)
+
+### US-199: Sign out
+**As a** user **I want** to sign out **so that** I can switch accounts or protect privacy.
+- **Epic:** EP-25 · **Codons:** — (upstream Hubs) · **Status:** 🚧 built*
+- **Acceptance criteria:**
+  - Sign-out ends the session and returns to the entry screen.
+- **Test:** none yet
+
+### US-200: Delete own account
+**As a** student **I want** to delete my account and data **so that** I control my footprint.
+- **Epic:** EP-25 · **Codons:** 33 (data lifecycle) · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Deletion removes personal data per policy.
+- **Test:** skipped (planned)
+
+---
+
+## EP-26 — In-Room Collaboration & Breakout
+
+> **Goal:** *As a teacher, I can organize collaborative work so that students learn
+> together and from each other.*
+
+### US-201: Split class into groups
+**As a** teacher **I want** to split the class into groups **so that** small-group work is possible.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Group assignment UI works.
+- **Test:** skipped (planned)
+
+### US-202: Assign students to groups
+**As a** teacher **I want** to assign or shuffle students into groups **so that** grouping is fair.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Assignment persists and can be edited.
+- **Test:** skipped (planned)
+
+### US-203: Breakout rooms
+**As a** student **I want** to be moved to my group's breakout space **so that** groups don't disturb each other.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Each group gets an isolated space.
+- **Test:** skipped (planned)
+
+### US-204: Teacher visits groups
+**As a** teacher **I want** to visit any group's breakout **so that** I can support everyone.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Teacher can hop between breakouts.
+- **Test:** skipped (planned)
+
+### US-205: Recombine groups
+**As a** teacher **I want** to bring the class back together **so that** we can debrief.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Recombine returns all students to the main space.
+- **Test:** skipped (planned)
+
+### US-206: Shared whiteboard
+**As a** student **I want** a shared whiteboard **so that** we can brainstorm visually.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Drawings sync live across the group.
+- **Test:** skipped (planned)
+
+### US-207: Collaborative marker on an element
+**As a** student **I want** to place a shared pin/marker on an element **so that** we can point at things together.
+- **Epic:** EP-26 · **Codons:** 19 (annotations) · **Status:** 🚧 built* (extended from annotation story)
+- **Acceptance criteria:**
+  - Multiple students see each other's markers.
+- **Test:** none yet
+
+### US-208: Group timer/task
+**As a** teacher **I want** a per-group timer or task prompt **so that** groups stay on pace.
+- **Epic:** EP-26 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Timer/task shows in each breakout.
+- **Test:** skipped (planned)
+
+---
+
+## EP-27 — Notifications & Scheduling
+
+> **Goal:** *As a teacher, I can schedule and remind, and as a student I never miss a
+> class.*
+
+### US-209: Create a scheduled class event
+**As a** teacher **I want** to schedule a class event **so that** it happens at a set time.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Event saved with time and room link.
+- **Test:** skipped (planned)
+
+### US-210: Calendar/email invite
+**As a** teacher **I want** an ICS/calendar invite **so that** students get it in their calendars.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Invite downloads/embeds in email.
+- **Test:** skipped (planned)
+
+### US-211: Email reminder
+**As a** student **I want** a reminder before class **so that** I don't forget.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Reminder fires at configured lead time.
+- **Test:** skipped (planned)
+
+### US-212: Room link in invite
+**As a** student **I want** the room link inside the invite **so that** joining is one click.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Link resolves to the room.
+- **Test:** skipped (planned)
+
+### US-213: Student sees upcoming classes
+**As a** student **I want** an upcoming-classes list **so that** I can plan.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Upcoming events visible after login.
+- **Test:** skipped (planned)
+
+### US-214: Notification preferences
+**As a** student **I want** to choose which notifications I get **so that** I'm not spammed.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Preferences persist and gate delivery.
+- **Test:** skipped (planned)
+
+### US-215: RSVP / attendance confirmations
+**As a** teacher **I want** RSVPs or attendance confirmations **so that** I know who's coming.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - RSVP state tracked and visible.
+- **Test:** skipped (planned)
+
+### US-216: Reschedule/cancel notifies
+**As a** teacher **I want** reschedule/cancel to notify students **so that** they aren't left waiting.
+- **Epic:** EP-27 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Change notification reaches attendees.
+- **Test:** skipped (planned)
+
+---
+
+## EP-28 — Data Protection & Compliance
+
+> **Goal:** *As an admin, the platform meets legal and ethical data rules so that schools
+> can use it safely.*
+
+### US-217: GDPR-compliant processing
+**As an** admin **I want** GDPR-compliant data processing **so that** we're lawful for EU schools.
+- **Epic:** EP-28 · **Codons:** 31, 33 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Processing documented with lawful basis.
+- **Test:** skipped (planned)
+
+### US-218: Consent for minors
+**As a** teacher **I want** consent handling for underage students **so that** we comply with child-data rules.
+- **Epic:** EP-28 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Guardian/teacher consent captured and stored.
+- **Test:** skipped (planned)
+
+### US-219: Student data export
+**As a** student **I want** to export my data **so that** I have a copy of what's stored.
+- **Epic:** EP-28 · **Codons:** 33 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Export returns a machine-readable bundle.
+- **Test:** skipped (planned)
+
+### US-220: Account deletion removes data
+**As a** student **I want** deletion to remove my data **so that** exercising my rights works.
+- **Epic:** EP-28 · **Codons:** 33 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Deletion cascades through all stores.
+- **Test:** skipped (planned)
+
+### US-221: Privacy policy accessible
+**As a** student **I want** a readable privacy policy **so that** I know what happens with my data.
+- **Epic:** EP-28 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Policy linked from sign-in/footer.
+- **Test:** skipped (planned)
+
+### US-222: Secure PII storage
+**As an** admin **I want** PII encrypted at rest/in transit **so that** breaches are less harmful.
+- **Epic:** EP-28 · **Codons:** 31 · **Status:** 🚧 built (TLS ✅; encryption-at-rest pending)
+- **Acceptance criteria:**
+  - PII fields protected by controls.
+- **Test:** none yet
+
+### US-223: Data retention policy
+**As an** admin **I want** a retention policy with enforcement **so that** old data is purged.
+- **Epic:** EP-28 · **Codons:** 33 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Retention rules delete/purge automatically.
+- **Test:** skipped (planned)
+
+### US-224: No unnecessary tracking
+**As a** student **I want** tracking limited to what's needed **so that** my behavior isn't sold.
+- **Epic:** EP-28 · **Codons:** 31, 32 · **Status:** 🚧 built* (analytics limited; audit pending)
+- **Acceptance criteria:**
+  - No third-party ad/tracking on the live domain.
+- **Test:** none yet
+
+### US-225: Data-processing records
+**As an** admin **I want** a record of processing activities **so that** compliance is auditable.
+- **Epic:** EP-28 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - ROPA document maintained.
+- **Test:** skipped (planned)
+
+---
+
+## EP-29 — Integration & Developer Ecosystem
+
+> **Goal:** *As a developer, I can build on the platform so that schools can connect and
+> extend it.*
+
+### US-226: Public read API for element data
+**As a** developer **I want** a stable public API for element data **so that** I can build tools on it.
+- **Epic:** EP-29 · **Codons:** 00–06 · **Status:** 🚧 built* (`GET /api/v1/hubs/element/:symbol` live)
+- **Acceptance criteria:**
+  - Read endpoints documented and versioned.
+- **Test:** covered by US-013/021/027
+
+### US-227: Webhooks for room events
+**As a** developer **I want** webhooks on room events **so that** external systems react.
+- **Epic:** EP-29 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Event delivery with retries.
+- **Test:** skipped (planned)
+
+### US-228: API tokens for integrations
+**As a** developer **I want** scoped API tokens **so that** integrations authenticate safely.
+- **Epic:** EP-29 · **Codons:** 07–09 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Tokens scoped and revocable.
+- **Test:** skipped (planned)
+
+### US-229: Embed room in another page
+**As a** teacher **I want** to embed a room in an LMS page **so that** students don't navigate away.
+- **Epic:** EP-29 · **Codons:** 42–45 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Embeddable iframe works within allowed origins.
+- **Test:** skipped (planned)
+
+### US-230: Developer playground/docs
+**As a** developer **I want** API docs and a playground **so that** I can integrate faster.
+- **Epic:** EP-29 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Docs exist with runnable examples.
+- **Test:** skipped (planned)
+
+### US-231: Versioned API
+**As a** developer **I want** versioned APIs **so that** my integrations don't break.
+- **Epic:** EP-29 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Breaking changes ship under a new version.
+- **Test:** skipped (planned)
+
+### US-232: Usage metrics for integrators
+**As a** developer **I want** usage metrics **so that** I can monitor my integration.
+- **Epic:** EP-29 · **Codons:** 32 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Key metrics available per integration.
+- **Test:** skipped (planned)
+
+### US-233: Sandbox/test mode for integrations
+**As a** developer **I want** a sandbox environment **so that** I don't break production.
+- **Epic:** EP-29 · **Codons:** 50 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Sandbox isolated from production data.
+- **Test:** skipped (planned)
+
+---
+
+## EP-30 — Quality Engineering
+
+> **Goal:** *As a developer and admin, quality is enforced automatically so that
+> regressions never reach students.*
+
+### US-234: Automated E2E regression for core journeys
+**As a** developer **I want** automated regression tests for core journeys **so that** the platform stays reliable.
+- **Epic:** EP-30 · **Codons:** 30, 52 · **Status:** 🚧 built* (initial live suites exist)
+- **Acceptance criteria:**
+  - Core journey suites run and gate releases.
+- **Test:** covered by `e2e/epics/*.spec.ts`
+
+### US-235: Contract/schema tests for APIs
+**As a** developer **I want** schema/contract tests for APIs **so that** payload changes are intentional.
+- **Epic:** EP-30 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Schema violations fail CI.
+- **Test:** skipped (planned)
+
+### US-236: Visual regression checks
+**As a** developer **I want** visual regression checks **so that** styling regressions are caught.
+- **Epic:** EP-30 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Screenshot diffs reviewed in CI.
+- **Test:** skipped (planned)
+
+### US-237: Accessibility checks in CI
+**As a** developer **I want** automated a11y checks **so that** WCAG regressions are caught.
+- **Epic:** EP-30 · **Codons:** 35 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - a11y test results in CI.
+- **Test:** skipped (planned)
+
+### US-238: Performance budgets in CI
+**As a** developer **I want** performance budgets checked in CI **so that** slowness is blocked.
+- **Epic:** EP-30 · **Codons:** 26, 30 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Budget violations fail CI.
+- **Test:** skipped (planned)
+
+### US-239: Story↔test traceability enforced
+**As a** developer **I want** every ✅ tested story to have a test **so that** docs and code never drift.
+- **Epic:** EP-30 · **Codons:** — · **Status:** 🚧 built (`scripts/check-story-tests.py`; CI wiring pending)
+- **Acceptance criteria:**
+  - `check-story-tests.py --strict` passes in CI.
+- **Test:** script exists; run manually / CI pending
+
+### US-240: Flake-free suites
+**As a** developer **I want** stable test suites (quarantine + retry policy) **so that** red runs mean real problems.
+- **Epic:** EP-30 · **Codons:** — · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Flake rate below defined threshold.
+- **Test:** skipped (planned)
+
+### US-241: Release quality gates
+**As a** developer **I want** quality gates before release (tests, a11y, perf, traceability) **so that** deploys are safe.
+- **Epic:** EP-30 · **Codons:** 50, 53 · **Status:** 📋 planned
+- **Acceptance criteria:**
+  - Ship blocked unless gates pass.
+- **Test:** skipped (planned)
+
+---
+
 ## Test Traceability Summary
 
 | Story | Status | Test location |
@@ -1383,9 +1990,12 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | US-027 API answers for any symbol | ✅ tested | `e2e/epics/ep-02-chemistry-content.spec.ts` |
 | US-097 CSP header (API) | ✅ tested | `e2e/epics/ep-02-chemistry-content.spec.ts` |
 | US-101 TLS everywhere | ✅ tested | `e2e/epics/ep-02-chemistry-content.spec.ts` |
-| US-093 compression, US-099 CORS restriction | 🚧 built (gap documented) | manual / none yet |
+| US-226 element data read API | ✅ tested (via 013/021/027) | as above |
+| US-234 E2E core journeys | 🚧 built* | `e2e/epics/*.spec.ts` |
+| US-239 story↔test traceability | 🚧 built | `scripts/check-story-tests.py` |
+| US-008, US-093, US-099 + EP-22/23/24/25 upstream features (`🚧 built*`) | 🚧 built (gap documented) | manual / none yet |
 | US-003…US-010, US-012, US-015…US-018, US-024, EP-06 stories | 🚧 built | manual / none yet |
-| EP-03 (except 021/027), EP-04…EP-20, most of EP-21 | 📋 planned | skipped reporting |
+| Remaining EP-03/04…21 and EP-26…30 (except noted) | 📋 planned | skipped reporting |
 
 ---
 
