@@ -11,7 +11,7 @@
 
 Add a structured, user-centric requirements layer to the hubs-compose project:
 
-1. **User Epics** covering the **entire roadmap** (Sprints 1–13, codons 00–53) — each
+1. **User Epics** covering the **entire roadmap** (Phase 1: Sprints 1–13, codons 00–53; Phase 2: Sprints 14–17, codons 54–69) — each
    epic expressed from the perspective of the people who use the platform.
 2. **User Stories** decomposed from those epics in the standard
    `As a <persona>, I want <capability>, so that <benefit>` format, one per numbered
@@ -24,7 +24,7 @@ Add a structured, user-centric requirements layer to the hubs-compose project:
 
 | Layer | Coverage | Status today |
 |---|---|---|
-| Epics + User Stories (docs) | **Whole roadmap** (Sprints 1–13, codons 00–53) | new document |
+| Epics + User Stories (docs) | **Whole roadmap** (Phase 1: Sprints 1–13, codons 00–53; Phase 2: Sprints 14–17, codons 54–69) | new document |
 | Automated tests | **Only built & running** features on `hubs.chemie-lernen.org` | extend `e2e/` |
 
 ### Runtime target (user-confirmed)
@@ -43,12 +43,16 @@ Tests target this live domain directly. No local stack boot required for the tes
 
 ---
 
-## 3. Epic Map (EP-01 … EP-30) — whole roadmap
+## 3. Epic Map (EP-01 … EP-38) — whole roadmap (Phase 1 + Phase 2)
 
 Epics are finer-grained per functional concern while keeping full traceability to
-roadmap sprints and codons. 30 epics (21 functional + 9 platform-capability epics
-EP-22…EP-30 covering communication, media sharing, moderation, accounts, collaboration,
-notifications, compliance, integration ecosystem, and quality engineering).
+roadmap sprints and codons. Phase 1 (Sprints 1–13, codons 00–53): 30 epics (21
+functional + 9 platform-capability epics EP-22…EP-30 covering communication, media
+sharing, moderation, accounts, collaboration, notifications, compliance, integration
+ecosystem, and quality engineering). Phase 2 (Sprints 14–17, codons 54–69): 8 further
+epics EP-31…EP-38 (AI tutoring, advanced lab, gamification, federation, inquiry
+portfolios, guardians & reporting, sustainability, next-gen immersion) — all currently
+📋 planned.
 
 | Epic | Title | Roadmap | Codons |
 |---|---|---|---|
