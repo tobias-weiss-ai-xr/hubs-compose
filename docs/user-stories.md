@@ -204,7 +204,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-017: Dashboard lists element rooms
 **As a** teacher **I want** the dashboard to enumerate rooms linked to the 118 elements **so that** I can spot which elements have ready classrooms.
-- **Epic:** EP-02 · **Codons:** 06–13 · **Status:** 🚧 built
+- **Epic:** EP-02 · **Codons:** 06–13 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Dashboard renders a list of element rooms.
 - **Test:** none yet
@@ -260,7 +260,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-024: Data is scientifically correct
 **As a** teacher **I want** element data to be accurate **so that** my students learn correct chemistry.
-- **Epic:** EP-03 · **Codons:** 14 · **Status:** 🚧 built · 🧪 service-tested (backend serves 118-element data; live correctness audit pending)
+- **Epic:** EP-03 · **Codons:** 14 · **Status:** 🚧 built · 🧪 service-tested (118-element data audit covered by service tests; live correctness audit pending for element metadata — live endpoint returns room listings)
 - **Acceptance criteria:**
   - Spot-checked facts (atomic number, symbol, group) match reference data.
 - **Test:** none yet
@@ -1997,6 +1997,8 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | US-008, US-093, US-099 + EP-22/23/24/25 upstream features (`🚧 built*`) | 🚧 built (gap documented) | manual / none yet |
 | US-003, US-004, US-005, US-006, US-008, US-009, US-010 (auth, EP-01) | 🧪 service-tested | `services/reticulum/test/ret_web/plugs/room_access_plug_test.exs`, `.../controllers/api/room_access_controller_test.exs`, `.../plugs/rate_limit_test.exs` (mix test) |
 | US-012 (classroom create), US-024 (element data) | 🧪 service-tested | `.../controllers/api/room_access_controller_test.exs`, `.../controllers/api/hub_controller_chemistry_test.exs`, `test/ret/chemistry_test.exs` (mix test) |
+| US-017 (dashboard lists element rooms) | 🧪 service-tested | `test/ret/hub_chemistry_test.exs` — pagination, entry-mode filter, newest-first ordering (mix test) |
+| US-024 (118-element table breadth), US-027 (unknown symbol) | ✅ tested (live) | live `e2e/epics/ep-03-element-data.spec.ts` |
 | US-013, US-021, US-027 (element API) | ✅ tested (live) **+** 🧪 service-tested | live `e2e/epics/ep-02-chemistry-content.spec.ts` + `hub_controller_chemistry_test.exs` |
 | US-003…US-010, US-012, US-015…US-018, US-024, EP-06 stories | 🚧 built | manual / none yet |
 | Remaining EP-03/04…21 and EP-26…30 (except noted) | 📋 planned | skipped reporting |
