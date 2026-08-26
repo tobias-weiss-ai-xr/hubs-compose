@@ -140,15 +140,34 @@ k6 run e2e/load-test.js
 
 User epics and user stories covering the whole roadmap live in
 [`docs/user-stories.md`](docs/user-stories.md) (30 epics, `US-001…US-241`). Each story
-carries a status: `✅ tested`, `🚧 built`, or `📋 planned`.
+carries a status: `✅ tested` (live), `🧪 service-tested` (Reticulum `mix test`),
+`🚧 built`, or `📋 planned`.
 
-Tests only exist for stories whose features are **already live** on the production
-endpoint `https://hubs.chemie-lernen.org`. They run against the live domain — no local
-stack boot needed:
+**Tier 1 — live tests** only cover stories whose features are **already live** on
+`https://hubs.chemie-lernen.org` (no local stack boot needed):
 
 ```bash
 cd e2e && npm run test:live
 ```
+
+**Tier 2 — Reticulum service tests** (`🧪 service-tested`) exercise the fork's auth,
+room-access, chemistry, and rate-limit code (`services/reticulum/test/`, e.g.
+`room_access_plug_test.exs`, `room_access_controller_test.exs`,
+`hub_controller_chemistry_test.exs`, `rate_limit_test.exs`, `chemistry_test.exs`).
+Run them inside the dev image against a local Postgres:
+
+```bash
+docker run --rm \
+  -e MIX_ENV=test -e DB_HOST=172.17.0.1 -e DB_CREDENTIALS=postgres \
+  -v "$PWD/services/reticulum:/code" -w /code \
+  hubs-compose-reticulum:latest mix test test/ret_web/plugs/room_access_plug_test.exs \
+    test/ret_web/controllers/api/room_access_controller_test.exs \
+    test/ret_web/controllers/api/hub_controller_chemistry_test.exs \
+    test/ret_web/plugs/rate_limit_test.exs test/ret/chemistry_test.exs
+```
+
+> `services/` is gitignored by repo policy; service-test edits live in the working tree
+> next to the (upstream-managed) service sources.
 
 Suite layout:
 
@@ -163,8 +182,9 @@ e2e/
 Every live test is named with its story id (e.g. `test("US-011 …")`) so failures trace
 straight back to the requirement.
 
-**Traceability check** — verifies that `✅ tested` stories actually have tests and that
-no stale tests linger on unmarked stories:
+**Traceability check** — verifies that `✅`/`🧪` tested stories actually have tests
+(live `e2e/epics/*.spec.ts` **or** `services/reticulum/test/**/*.exs`) and that no
+stale tests linger on unmarked stories:
 
 ```bash
 python3 scripts/check-story-tests.py            # informational

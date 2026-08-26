@@ -30,6 +30,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | ✅ **tested** | Feature is live on `hubs.chemie-lernen.org` and covered by an automated test that passes. | Test runs and must pass. |
 | 🚧 **built** | Feature exists in the codebase/compose stack but is not (yet) covered by an automated test on the live domain. | Reported as skipped with a note; manual check recorded. |
 | 🚧 **built\*** | Feature comes from **upstream Mozilla Hubs** (chat, reactions, media, moderation, accounts) or exists as tooling, but **live behavior is unverified** on this deployment. | Reported as skipped with a note until live-verified. |
+| 🧪 **service-tested** | Feature is exercised by **Reticulum `mix test`** suites in `services/reticulum/test/` (run inside the `hubs-compose-reticulum` container). The live public endpoint may still be unverified. | Service tests must pass (`mix test`); live check may remain skipped. |
 | 📋 **planned** | Roadmap only — no implementation yet. | Reported as skipped. |
 
 ---
@@ -94,7 +95,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-003: Teacher obtains a signed room access token
 **As a** teacher **I want** to request a JWT-signed room `access_token` **so that** I can hand students a controlled entry credential.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Token endpoint issues a signed JWT containing room + role claims.
   - Token carries an expiry and a role (`student` | `teacher`).
@@ -102,7 +103,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-004: Student enters room with access token
 **As a** student **I want** to enter a room using my access token **so that** I land inside the 3D classroom.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Providing a valid token admits the student to the room.
   - The room honors the token's role claim on entry.
@@ -110,14 +111,14 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-005: Expired token rejected
 **As a** teacher **I want** expired tokens to be refused at the room boundary **so that** old links stop granting access.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built (`RoomAccessPlug`)
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested (`RoomAccessPlug`)
 - **Acceptance criteria:**
   - An expired token is rejected with a clear error and no room access.
 - **Test:** none yet
 
 ### US-006: Invalid token signature rejected
 **As a** teacher **I want** forged or tampered tokens to be rejected **so that** only tokens signed by our service work.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built (`RoomAccessPlug`)
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested (`RoomAccessPlug`)
 - **Acceptance criteria:**
   - A token with an invalid signature is denied.
 - **Test:** none yet
@@ -131,7 +132,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-008: Rate limiting protects auth endpoints
 **As an** admin **I want** token/hub creation endpoints rate-limited **so that** attackers cannot spam credentials or exhaust resources.
-- **Epic:** EP-01 · **Codons:** 10–13 · **Status:** 🚧 built (`PlugAttack`)
+- **Epic:** EP-01 · **Codons:** 10–13 · **Status:** 🚧 built · 🧪 service-tested (`PlugAttack`)
 - **Acceptance criteria:**
   - Excess requests are rejected.
   - **Verified live (2026-08-26):** `/api/*` returns **HTTP 403 "Forbidden"** after ~10 requests per window — rate limiting is active (returns 403 rather than 429). Live test suites must stay under this budget.
@@ -139,14 +140,14 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-009: Role claims enforced at room entry
 **As a** teacher **I want** student vs teacher roles to be enforced when someone enters **so that** only teachers get moderation powers.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Teacher-token entry grants teacher capabilities; student-token entry does not.
 - **Test:** none yet
 
 ### US-010: Guest without token denied from protected rooms
 **As a** teacher **I want** guests without a token to be blocked from protected rooms **so that** my classroom is private.
-- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built
+- **Epic:** EP-01 · **Codons:** 07–09 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Navigating to a protected room without credentials yields a denial/error, not entry.
 - **Test:** none yet
@@ -167,7 +168,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-012: Create a room
 **As a** teacher **I want** to create a new hub/room **so that** each class gets its own space.
-- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** 🚧 built
+- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** 🚧 built · 🧪 service-tested
 - **Acceptance criteria:**
   - Creating a room succeeds and the room appears in listings.
 - **Test:** none yet
@@ -259,7 +260,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-024: Data is scientifically correct
 **As a** teacher **I want** element data to be accurate **so that** my students learn correct chemistry.
-- **Epic:** EP-03 · **Codons:** 14 · **Status:** 🚧 built (backend serves data; correctness audit pending)
+- **Epic:** EP-03 · **Codons:** 14 · **Status:** 🚧 built · 🧪 service-tested (backend serves 118-element data; live correctness audit pending)
 - **Acceptance criteria:**
   - Spot-checked facts (atomic number, symbol, group) match reference data.
 - **Test:** none yet
@@ -1994,8 +1995,26 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | US-234 E2E core journeys | 🚧 built* | `e2e/epics/*.spec.ts` |
 | US-239 story↔test traceability | 🚧 built | `scripts/check-story-tests.py` |
 | US-008, US-093, US-099 + EP-22/23/24/25 upstream features (`🚧 built*`) | 🚧 built (gap documented) | manual / none yet |
+| US-003, US-004, US-005, US-006, US-008, US-009, US-010 (auth, EP-01) | 🧪 service-tested | `services/reticulum/test/ret_web/plugs/room_access_plug_test.exs`, `.../controllers/api/room_access_controller_test.exs`, `.../plugs/rate_limit_test.exs` (mix test) |
+| US-012 (classroom create), US-024 (element data) | 🧪 service-tested | `.../controllers/api/room_access_controller_test.exs`, `.../controllers/api/hub_controller_chemistry_test.exs`, `test/ret/chemistry_test.exs` (mix test) |
+| US-013, US-021, US-027 (element API) | ✅ tested (live) **+** 🧪 service-tested | live `e2e/epics/ep-02-chemistry-content.spec.ts` + `hub_controller_chemistry_test.exs` |
 | US-003…US-010, US-012, US-015…US-018, US-024, EP-06 stories | 🚧 built | manual / none yet |
 | Remaining EP-03/04…21 and EP-26…30 (except noted) | 📋 planned | skipped reporting |
+
+## Verified Findings & Known State
+
+- **Guest auth behavior (deliberate fork change):** unauthenticated requests to
+  `:auth_required` endpoints (`/rooms/token`, `/rooms/classroom`, assets, scenes,
+  projects, media search) return **HTTP 200** with an empty `{suggestions, meta, entries}`
+  payload instead of a 401 — implemented in `lib/ret_web/auth_error_handler.ex`
+  (commit `e10098c0`, "prevents Hubs frontend crash on invalid auth tokens").
+- **Consequence for the test suite:** ~28 pre-existing service tests (written against
+  stock-Hubs 401 behavior) fail on this deliberate behavior. Story-related suites
+  (`room_access_*`, `hub_controller_chemistry`, `chemistry`, `rate_limit`) pass 62/62
+  and encode the real guest-200 behavior for the token/classroom endpoints.
+- **Live behavior observed 2026-08-26:** `POST /api/v1/rooms/token` is not reachable on
+  the public domain (404); room entry (`/rooms/:id/join`) is protected by RoomAccess
+  (403 without token).
 
 ---
 
