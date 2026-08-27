@@ -211,12 +211,11 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 
 ### US-016: Room entry lands in 3D client
 **As a** student **I want** clicking a room link to load the Hubs client **so that** I enter the 3D classroom.
-- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** ⚠️ known defect — live client renders `HomePage` for every path; URL changes (room created/visited) but the room client never loads.
-  Root cause (2026-08-27): the frontend is served as a static `dist` snapshot by a Python `http.server` behind Traefik instead of Reticulum's dynamic page rendering, so the SPA boots as HomePage for all paths and never enters a room.
+- **Epic:** EP-02 · **Codons:** 03–06 · **Status:** ✅ tested (live, fixed 2026-08-27)
 - **Acceptance criteria:**
   - Room URL serves the client shell (HTTP 200, `App` title) rather than an error.
   - Visiting `/<hub_id>/<slug>` renders the room client (A-Frame canvas / iframe), not the landing page.
-- **Test:** `e2e/epics/ep-04-room-entry.spec.ts` (US-016 + US-012) — RED until fixed. Reproduced 2026-08-26: direct room URL `https://hubs.chemie-lernen.org/5Vnt5wx/wasserstoff-raum` and created room `/bW3gyXD/elegant-striking-cosmos` both render `main.HomePage__home-page__x0clY`, no canvas/iframe, no console errors.
+- **Test:** `e2e/epics/ep-04-room-entry.spec.ts` (US-016 + US-012) — GREEN since 2026-08-27. Root cause was the production `static-server.py` serving `dist`: its SPA rewrite only mapped `/<7-char>` (room id, no slug) to `hub.html`; real room URLs include the slug (`/<id>/<slug>`) and fell through to `index.html` (landing HomePage). Fixed by adding the slug pattern so room URLs serve `hub.html`; clicking "Create Room" now enters the 3D room client.
 
 ### US-017: Dashboard lists element rooms
 **As a** teacher **I want** the dashboard to enumerate rooms linked to the 118 elements **so that** I can spot which elements have ready classrooms.
@@ -2036,13 +2035,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 - **Service test reconciliation (2026-08-26):** the ~28 stale tests written against
   stock-Hubs 401 behavior were updated to assert the real fork behavior (200-empty for
   guests) or made meaningful (hub non-owner test now authenticates a second account).
-- **Room entry defect (US-016, reproduced 2026-08-26 via `ep-04-room-entry.spec.ts`):**
-  the served Hubs client renders `main.HomePage__home-page__x0clY` for **every** path.
-  Direct room URLs (`/5Vnt5wx/wasserstoff-raum`) and freshly created rooms
-  (`/bW3gyXD/elegant-striking-cosmos` after "Create Room") change the URL but never load
-  the room client: no A-Frame canvas, no iframe, no console errors. Room creation itself
-  works (element API lists the new hubs; slug/hub_id are correct). Root cause is
-  client-side (router/config), not the API.
+- **Room-entry defect (US-016):** the served Hubs client rendered `main.HomePage__home-page__x0clY` for **every** path — direct room URLs and freshly created rooms changed the URL but never loaded the room client (no A-Frame canvas, no iframe). Room creation itself worked (element API lists the new hubs). Root cause: the production frontend is served by `static-server.py` (Python) from the built `dist`; its SPA rewrite only mapped `/<7-char>` (room id without slug) to `hub.html`, so real room URLs (`/<id>/<slug>`) fell through to `index.html` (landing). **FIXED 2026-08-27 on the live host:** added the slug pattern to the rewrite list in `/code/static-server.py` and restarted `hubs-client`. Verified: room URLs and post-"Create Room" URLs now serve `hub.html` and load the 3D room client (title "Room | App by Company", canvas present). Harness ep-04 US-016 now passes.
 - **Image defect (US-018):** all 3 images on `/` rendered with `src=""` (header logo,
   `HomePage__logo-container`, hero "Screenshot of hubs.chemie-lernen.org") — branding/image
   config was not fed to the client (the production bundle has an empty `APP_CONFIG.images`;
