@@ -2,28 +2,35 @@
 #
 # Optimized multi-stage build for the Hubs client (hubs.chemie-lernen.org).
 #
-# Stage 1 builds the webpack bundle (services/hubs -> dist/) with persistent
-# BuildKit cache mounts so incremental CI builds on the legion runner are fast.
-# Stage 2 is a slim runtime that serves the built dist via static-server.py
-# (Python), including the SPA rewrite that maps room URLs to hub.html.
+# - deps:         install npm dependencies (cached layer)
+# - client-build: webpack build of services/hubs -> dist/ (BuildKit cache mounts
+#                 make incremental CI builds on the legion runner fast)
+# - storybook:    dev-only stage with node_modules for the Storybook server
+# - runtime:      slim runtime serving dist/ via static-server.py (incl. the
+#                 room-URL -> hub.html SPA rewrite). Fully baked, no host bind-mount.
 ARG NODE_VERSION=22
 
-# ---------- Build the Hubs client (webpack) ----------
-FROM --platform=linux/amd64 node:${NODE_VERSION} AS client-build
+# ---------- Dependencies (cached unless package files change) ----------
+FROM --platform=linux/amd64 node:${NODE_VERSION} AS deps
 WORKDIR /src
-
-# Install dependencies first so this layer is cached unless package files change.
 COPY services/hubs/package.json services/hubs/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --prefer-offline --no-audit --no-fund
 
-# Build sources. webpack.config.js uses cache: { type: "filesystem" } into
-# node_modules/.cache/webpack; the BuildKit cache mount persists it across runs
-# on the same runner, giving fast incremental rebuilds.
+# ---------- Build the Hubs client (webpack) ----------
+FROM deps AS client-build
 COPY services/hubs/ ./
+# webpack.config.js uses cache: { type: "filesystem" } into node_modules/.cache/webpack;
+# the BuildKit cache mount persists it across runs on the same runner.
 RUN --mount=type=cache,target=/root/.npm \
     --mount=type=cache,target=/src/node_modules/.cache/webpack \
     npm run build
+
+# ---------- Dev-only: Storybook server (keeps node_modules + source) ----------
+FROM deps AS storybook
+COPY services/hubs/ ./
+EXPOSE 6006
+CMD ["npm", "run", "storybook", "--", "--no-open"]
 
 # ---------- Runtime: static file server ----------
 FROM --platform=linux/amd64 node:${NODE_VERSION}-slim AS runtime

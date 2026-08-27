@@ -981,16 +981,13 @@ services:
         bind: {}
     working_dir: /code/admin
   hubs-client:
-    build:
-      context: /home/weiss/git/hubs-compose
-      dockerfile: dockerfiles/hubs.Dockerfile
+    # Baked image built by the optimized CI on the legion runner (build-images.yml).
+    # No host bind-mount: dist/ + static-server.py are baked into the image.
+    image: ghcr.io/tobias-weiss-ai-xr/hubs:latest
+    pull_policy: always
     command:
-      - npm
-      - run
-      - local
-      - --
-      - --allowed-hosts
-      - all
+      - python3
+      - /code/static-server.py
     depends_on:
       reticulum:
         condition: service_started
@@ -1007,27 +1004,23 @@ services:
         - CMD
         - curl
         - -fk
-        - http://localhost:8084
+        - http://localhost:8080
       start_period: 3m30s
     networks:
       default: null
     platform: linux/amd64
     ports:
       - mode: ingress
-        target: 8084
-        published: "8084"
+        target: 8080
+        published: "8080"
         protocol: tcp
     restart: unless-stopped
-    volumes:
-      - type: bind
-        source: /home/weiss/git/hubs-compose/services/hubs
-        target: /code
-        bind: {}
     working_dir: /code
   hubs-storybook:
     build:
       context: /home/weiss/git/hubs-compose
       dockerfile: dockerfiles/hubs.Dockerfile
+      target: storybook
     command:
       - sh
       - -c

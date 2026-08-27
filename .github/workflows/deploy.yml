@@ -45,8 +45,9 @@ jobs:
               fi
             done
 
-            # Build and deploy all services
-            docker compose build --parallel
+            # Pull the prebuilt images (hubs-client is baked by the legion CI runner;
+            # services with a local build: are built by 'up' below).
+            docker compose pull
             docker compose up -d --force-recreate
 
             # Wait and verify
