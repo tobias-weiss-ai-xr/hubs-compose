@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "test": "playwright test",
+    "test:live": "playwright test",
+    "test:local": "HUBS_BASE_URL=http://localhost:9090 DIALOG_URL=https://localhost:4443 playwright test",
     "test:headed": "playwright test --headed"
   },
   "devDependencies": {
