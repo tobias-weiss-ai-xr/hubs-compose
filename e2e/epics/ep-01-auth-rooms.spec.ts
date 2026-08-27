@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
 const BASE = "https://hubs.chemie-lernen.org";
 
 test.describe("US-001 open platform", () => {
-  test("US-001 GET / returns HTTP 200 with the Hubs app shell", async ({ request }) => {
+  test("US-001 US-305 GET / returns HTTP 200 with the Hubs app shell", async ({ request }) => {
     const res = await request.get("/");
     expect(res.status()).toBe(200);
     const body = await res.text();

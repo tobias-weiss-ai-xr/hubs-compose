@@ -35,7 +35,7 @@ async function getApiWithRetry(request: APIRequestContext, path: string, tries =
 const REPRESENTATIVE = ["H", "He", "C", "Fe", "Ag", "U"]; // periods 1,1,2,4,5,7
 
 test.describe("US-024 element API breadth across the periodic table", () => {
-  test("US-024 representative symbols all return 200 with room payloads", async ({ request }) => {
+  test("US-024 US-245 representative symbols all return 200 with room payloads", async ({ request }) => {
     for (const symbol of REPRESENTATIVE) {
       const res = await getApiWithRetry(request, `/api/v1/hubs/element/${symbol}`);
       expect(res.status(), `symbol ${symbol}`).toBe(200);
@@ -46,7 +46,7 @@ test.describe("US-024 element API breadth across the periodic table", () => {
     }
   });
 
-  test("US-024 returned rooms carry pse_url and entry_mode", async ({ request }) => {
+  test("US-024 US-246 returned rooms carry pse_url and entry_mode", async ({ request }) => {
     const res = await getApiWithRetry(request, "/api/v1/hubs/element/C");
     expect(res.status()).toBe(200);
     const body = await res.json();
@@ -61,7 +61,7 @@ test.describe("US-024 element API breadth across the periodic table", () => {
 });
 
 test.describe("US-027 unknown symbol handling", () => {
-  test("US-027 Zz returns 200 with an empty room list", async ({ request }) => {
+  test("US-027 US-245 Zz returns 200 with an empty room list", async ({ request }) => {
     const res = await getApiWithRetry(request, "/api/v1/hubs/element/Zz");
     expect(res.status()).toBe(200);
     const body = await res.json();

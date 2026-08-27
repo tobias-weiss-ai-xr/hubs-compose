@@ -71,6 +71,19 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | EP-29 | Integration & Developer Ecosystem | (new) | — | US-226…US-233 |
 | EP-30 | Quality Engineering | (new) | — | US-234…US-241 |
 
+**As-built (existing fork code)** — epics mapped to the code that is actually implemented in `services/reticulum` (no roadmap coupling):
+
+| Epic | Title (code surface) | Status set | Stories |
+|---|---|---|---|
+| EP-31 | Element Data & Room Linking (`Ret.Chemistry`, element API) | ✅ live / 🧪 | US-242…US-249 |
+| EP-32 | Room Access & Join Tokens (`Ret.Room.Token`, `RoomAccessPlug`) | 🧪 | US-250…US-257 |
+| EP-33 | Rate Limiting & Defensive API (`RateLimit`, guest-200) | 🧪 / 🚧 | US-258…US-265 |
+| EP-34 | RBAC & Roles (`Ret.HubRole`, `hub_role_memberships`) | 🚧 | US-266…US-273 |
+| EP-35 | Classroom Sync & Progress (channel handlers, `user_progress`, analytics) | 🧪 / 🚧 | US-274…US-281 |
+| EP-36 | Content Management API (hubs, scenes, projects, assets, credentials, media) | 🧪 / 🚧 | US-282…US-289 |
+| EP-37 | Security Hardening (CSP, auth-error handling, admin gates) | ✅ / 🧪 / 🚧 | US-290…US-297 |
+| EP-38 | Operations, Health & Delivery (health, caches, TLS landing) | 🧪 / 🚧 | US-298…US-305 |
+
 ---
 
 ## EP-01 — Access & Authentication
@@ -2006,6 +2019,7 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
 | US-016 (room entry), US-012→US-016 (create→enter), US-018 (images) | ⚠️ known defect — RED harness | `e2e/epics/ep-04-room-entry.spec.ts` (intentionally failing until platform fix) |
 | US-003…US-010, US-012, US-015, US-017, US-024, EP-06 stories | 🚧 built / 🧪 / ⚠️ as noted | see rows above; manual / none yet |
 | Remaining EP-03/04…21 and EP-26…30 (except noted) | 📋 planned | skipped reporting |
+| As-built EP-31…EP-38 (existing fork code in `services/reticulum`, US-242…US-305) | ✅ / 🧪 / 🚧 per story | service tests (`mix test`) + live specs — see each epic's Test lines |
 
 ## Verified Findings & Known State
 
@@ -2040,6 +2054,491 @@ still on the roadmap is marked **planned** and reported as skipped by the test s
   (403 without token).
 
 ---
+
+## EP-31 — Element Data & Room Linking (existing code)
+
+> **Goal:** *As a student, the platform's element dataset and element-room lookup — the fork's chemistry backend (`Ret.Chemistry`, `Ret.Hub.get_element_rooms/2`, `GET /api/v1/hubs/element/:symbol`) — are complete, correct, and queryable.*
+
+### US-242: Complete 118-element dataset
+**As a** student **I want** the periodic table to contain all 118 elements **so that** anything in the curriculum is present.
+- **Epic:** EP-31 · **Codons:** 00–04 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `Ret.Chemistry.all_elements/0` returns exactly 118 elements with German names.
+  - Atomic numbers cover 1..118 sequentially.
+- **Test:** `test/ret/chemistry_test.exs` (`# US-242`)
+
+### US-243: Scientifically valid element metadata
+**As a** student **I want** each element's data (mass, period, group, block, colour) to be in valid ranges **so that** models and the table are trustworthy.
+- **Epic:** EP-31 · **Codons:** 00–04 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Mass > 0; period 1–7; block in s/p/d/f; group in the 10 defined groups; group_number 1–18; colour 0..0xFFFFFF.
+  - Names unique; all element symbols pass `Chemistry.validate_chemistry_data/1`; all 10 groups represented.
+- **Test:** `test/ret/chemistry_test.exs` (`# US-243`)
+
+### US-244: Element room lookup by symbol
+**As a** student **I want** to query rooms for a symbol via `GET /api/v1/hubs/element/:symbol` **so that** I can jump to element-specific content.
+- **Epic:** EP-31 · **Codons:** 00–06 · **Status:** ✅ tested · 🧪 service-tested
+- **Acceptance criteria:**
+  - Endpoint is public (`:auth_optional`) and returns 200 with `{hubs, pagination}`.
+  - Symbol matching is case-insensitive per element data.
+- **Test:** `e2e/epics/ep-02-chemistry-content.spec.ts` + `.../api/hub_controller_chemistry_test.exs` (`# US-244`)
+
+### US-245: Any symbol answers 200
+**As a** student **I want** the element endpoint to answer 200 for any symbol, including unknown ones **so that** the frontend never breaks on a missing element.
+- **Epic:** EP-31 · **Codons:** 00–06 · **Status:** ✅ tested
+- **Acceptance criteria:**
+  - Known (H, Og, fe, He, C, Fe, Ag, U) and unknown (Zz) symbols all return 200; unknown returns empty `hubs`.
+- **Test:** `e2e/epics/ep-02-chemistry-content.spec.ts` + `e2e/epics/ep-03-element-data.spec.ts` (`US-245`)
+
+### US-246: Element rooms carry a PSE link
+**As a** student **I want** each listed room to include a `pse_url` to the periodic-table site **so that** I can open the source of truth.
+- **Epic:** EP-31 · **Codons:** 00–06 · **Status:** ✅ tested
+- **Acceptance criteria:**
+  - `pse_url` matches `https://pse.chemie-lernen.org?element=<symbol>` (built in `hub_view.ex`).
+- **Test:** `e2e/epics/ep-03-element-data.spec.ts` (`US-246`)
+
+### US-247: Rooms are linked to elements via chemistry metadata
+**As a** teacher **I want** rooms carrying `user_data.chemistry.symbol` to be found under that element **so that** element rooms stay curated.
+- **Epic:** EP-31 · **Codons:** 00–06 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `Hub.get_element_rooms/2` returns rooms whose `user_data->'chemistry'->>'symbol'` equals the symbol.
+- **Test:** `test/ret/hub_chemistry_test.exs` (`# US-247`)
+
+### US-248: Room listing honors entry mode
+**As a** student **I want** the element room listing to hide `deny` rooms and show `invite` rooms **so that** locked rooms stay private.
+- **Epic:** EP-31 · **Codons:** 06–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Query filters `entry_mode in [:allow, :invite]`; `:deny` rooms are excluded.
+- **Test:** `test/ret/hub_chemistry_test.exs` (`# US-248`)
+
+### US-249: Element room results are paginated
+**As a** student **I want** element results paginated **so that** large listings stay fast.
+- **Epic:** EP-31 · **Codons:** 06–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Scrivener page with `page`/`page_size`; `total_entries`, `total_pages`, newest-first ordering.
+- **Test:** `test/ret/hub_chemistry_test.exs` (`# US-249`)
+
+## EP-32 — Room Access & Join Tokens (existing code)
+
+> **Goal:** *As a student and teacher, joining a room is protected by short-lived, room-scoped RS512 tokens — the fork's `Ret.Room.Token` and `RoomAccessPlug`.*
+
+### US-250: Teacher obtains a signed room token
+**As a** teacher **I want** a signed room token from `POST /api/v1/rooms/token` (auth required) **so that** students can be equipped to join.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Token endpoint exists behind `:auth_required`; issuance for a room id succeeds.
+- **Test:** `.../api/room_access_controller_test.exs` (`# US-250`)
+- **Note:** on the live deployment the endpoint answers 404 publicly (not routed/moved) — documented hardening candidate.
+
+### US-251: Student joins a room with a valid token
+**As a** student **I want** to join via `POST /api/v1/rooms/:room_id/join` carrying `x-room-access-token` **so that** I enter the classroom.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `RoomAccessPlug` validates the header; valid token → controller response, 403 with a machine-readable code otherwise.
+- **Test:** `.../plugs/room_access_plug_test.exs` + `.../api/room_access_controller_test.exs` (`# US-251`)
+
+### US-252: Expired token rejected
+**As a** student **I want** expired tokens refused **so that** stale links cannot be replayed forever.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Expired (TTL ≤ 0) token → 403 `room_access_token_expired` at plug and route level.
+- **Test:** `.../plugs/room_access_plug_test.exs` + `.../api/room_access_controller_test.exs` (`# US-252`)
+
+### US-253: Tampered token rejected
+**As a** student **I want** invalid-signature tokens refused **so that** room access cannot be forged.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Signature-tampered token → 403 `invalid_room_access_token`.
+- **Test:** `.../plugs/room_access_plug_test.exs` + `.../api/room_access_controller_test.exs` (`# US-253`)
+
+### US-254: Role claim enforced at join
+**As a** teacher **I want** the token's `role` (student/teacher) honored on join **so that** role-based capabilities follow.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Join response reflects the token role; student tokens join as students, teacher tokens as teachers.
+- **Test:** `.../plugs/room_access_plug_test.exs` + `.../api/room_access_controller_test.exs` (`# US-254`)
+
+### US-255: Tokens are room-scoped and short-lived
+**As a** teacher **I want** tokens bound to one room id with a 5-minute default TTL **so that** one token cannot open other rooms.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Claims: `join_hub: true`, `room_id`, `sub`, `role`, `exp`; default TTL 300 s; round-trip verify returns the claims.
+- **Test:** `.../plugs/room_access_plug_test.exs` (`# US-255`)
+
+### US-256: Classroom creation via API
+**As a** teacher **I want** `POST /api/v1/rooms/classroom` (auth required) to create a classroom room **so that** classrooms can be provisioned programmatically.
+- **Epic:** EP-32 · **Codons:** 06–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Authenticated calls create a classroom; response contains room data.
+- **Test:** `.../api/room_access_controller_test.exs` (`# US-256`)
+
+### US-257: Guests without tokens handled gracefully
+**As a** student **I want** guest access to fail without breaking the client **so that** the UI never crashes on missing auth.
+- **Epic:** EP-32 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Unauthenticated protected calls return HTTP 200 with empty payloads (fork's `AuthErrorHandler` behavior) — deliberate fork change, see findings.
+- **Test:** `.../api/room_access_controller_test.exs` (`# US-257`)
+
+## EP-33 — Rate Limiting & Defensive API Behavior (existing code)
+
+> **Goal:** *As an admin and teacher, the API survives abuse — the fork's `RetWeb.Plugs.RateLimit` (PlugAttack) plus guest-first JSON responses.*
+
+### US-258: API requests are rate-limited per IP
+**As an** admin **I want** `/api/*` rate-limited per IP **so that** one client cannot saturate the service.
+- **Epic:** EP-33 · **Codons:** 08 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - PlugAttack gate fires at 1 request/second per IP (observed live as 403 "Forbidden" bursts, recovering ~1 s).
+- **Test:** `.../plugs/rate_limit_test.exs` (`# US-258`)
+
+### US-259: Throttling is environment-gated
+**As a** developer **I want** throttling compiled off in test/dev **so that** test suites are fast and deterministic.
+- **Epic:** EP-33 · **Codons:** 08 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `config :ret, RetWeb.Plugs.RateLimit, throttle?: false` in test env; `true` in prod.
+- **Test:** `.../plugs/rate_limit_test.exs` (`# US-259`)
+
+### US-260: Rate-limit events are measurable
+**As an** admin **I want** rate-limited responses measured via Statix **so that** abuse is observable.
+- **Epic:** EP-33 · **Codons:** 08 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Rate-limited responses emit a metric (upstream measurement code path).
+- **Test:** none yet
+
+### US-261: Guest requests return empty JSON instead of crashing
+**As a** student **I want** protected endpoints to answer guests with HTTP 200-empty payloads **so that** the Hubs frontend never crashes on invalid/missing auth tokens.
+- **Epic:** EP-33 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Projects, project assets, scenes, credentials, assets return `{entries, meta, suggestions}` empty for unauthenticated callers.
+- **Test:** `.../api/projects_controller_test.exs` etc. (`# US-261`)
+
+### US-262: Cross-user media search leaks nothing
+**As a** student **I want** media search by another user to not reveal data **so that** privacy holds.
+- **Epic:** EP-33 · **Codons:** 08 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Cross-user/unhandled `MediaSearchController` requests → empty paginated JSON (fork change, commit `f005eb38`).
+- **Test:** `.../api/media_search_controller_test.exs` (`# US-262`)
+
+### US-263: Unauthenticated classroom creation creates nothing
+**As a** teacher **I want** a guest calling `/rooms/classroom` to get no room and no error wall **so that** unauthenticated clients stay functional.
+- **Epic:** EP-33 · **Codons:** 06–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Guest call → 200 empty or not-a-room response; no room row created.
+- **Test:** `.../api/room_access_controller_test.exs` (`# US-263`)
+
+### US-264: Unauthenticated hub updates are rejected
+**As a** teacher **I want** rooms only editable by their owners **so that** guests cannot modify rooms.
+- **Epic:** EP-33 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Authenticated non-owner hub update → 401 "You cannot update this hub".
+- **Test:** `.../api/hub_controller_test.exs` (`# US-264`)
+
+### US-265: Throttle windows recover quickly
+**As a** student **I want** the limiter to recover after a short window **so that** brief bursts do not lock me out for long.
+- **Epic:** EP-33 · **Codons:** 08 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - After the 1 s window elapses requests succeed again (observed live; pacing used in the live suite).
+- **Test:** none yet
+
+## EP-34 — RBAC & Roles (existing code)
+
+> **Goal:** *As a teacher and admin, room membership has a real role model — the fork's `Ret.HubRole` engine and `hub_role_memberships.role` enum.*
+
+### US-266: Four standard roles exist
+**As a** teacher **I want** owner/teacher/student/guest roles **so that** the classroom has a clear hierarchy.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `Ret.HubRole` defines `[:owner, :teacher, :student, :guest]`.
+- **Test:** none yet
+
+### US-267: Roles map to permissions
+**As a** teacher **I want** each role to carry defined permissions **so that** capabilities are predictable.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `@role_permissions` matrix defines per-role permissions (moderation, media, navigation…).
+- **Test:** none yet
+
+### US-268: Role memberships persist per hub and account
+**As a** teacher **I want** memberships stored in `hub_role_memberships` with a required role **so that** roles survive across sessions.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Ecto.Enum `role` (:owner/:teacher/:student/:guest) is required on insert.
+- **Test:** none yet (fixtures in `ret_test.exs`/`entity_test.exs` insert `role: :owner`)
+
+### US-269: Roles CRUD API
+**As an** admin **I want** `GET/POST /hubs/:hub_id/roles` and `PUT/DELETE /hubs/:hub_id/roles/:account_id` **so that** membership is manageable programmatically.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `RbacController` exposes index/show/create/update/delete for roles.
+- **Test:** none yet
+
+### US-270: Permissions query per hub and account
+**As a** developer **I want** `GET /hubs/:hub_id/permissions/:account_id` **so that** clients can render capability-aware UI.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Endpoint returns the effective permission set for the account in the hub.
+- **Test:** none yet
+
+### US-271: Roster listing
+**As a** teacher **I want** `GET /hubs/:id/roster` **so that** I can see who is enrolled.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Roster endpoint returns members with roles.
+- **Test:** none yet
+
+### US-272: Roster add/remove
+**As a** teacher **I want** to add and remove students from the roster **so that** enrollment stays current.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `POST /hubs/:id/roster` adds, `DELETE /hubs/:id/roster/:account_id` removes.
+- **Test:** none yet
+
+### US-273: RBAC gates join and permissions
+**As a** teacher **I want** role checks enforced where members are admitted **so that** guests cannot take teacher actions.
+- **Epic:** EP-34 · **Codons:** 12–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Role/permission checks reach join and signaling paths.
+- **Test:** none yet
+
+## EP-35 — Classroom Synchronization & Progress (existing code)
+
+> **Goal:** *As a teacher and student, the classroom channel keeps state in sync and progress is tracked — fork channel handlers plus the `user_progress` table and analytics endpoint.*
+
+### US-274: Teacher navigation broadcast
+**As a** teacher **I want** my navigation broadcast to the class **so that** everyone follows the same element.
+- **Epic:** EP-35 · **Codons:** 18–21 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `hub_channel` broadcasts navigation to room members.
+- **Test:** none yet
+
+### US-275: Shared annotations
+**As a** teacher **I want** annotations added/removed to sync with the class **so that** I can annotate the shared screen.
+- **Epic:** EP-35 · **Codons:** 18–21 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Annotation CRUD handlers exist and broadcast changes.
+- **Test:** none yet
+
+### US-276: Late joiners get current classroom state
+**As a** student **I want** to see the teacher's current state after joining late **so that** I am never lost.
+- **Epic:** EP-35 · **Codons:** 18–21 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Join/resume path returns current navigation/quiz state.
+- **Test:** none yet
+
+### US-277: Quiz lifecycle in the classroom
+**As a** teacher **I want** start-quiz, submit-answer, get-results, end-quiz handlers **so that** quizzes run live in class.
+- **Epic:** EP-35 · **Codons:** 22 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `classroom:start_quiz` / `submit_answer` / `get_quiz_results` / `end_quiz` handler flow exists (commit `a40a5e3b`).
+- **Test:** none yet
+
+### US-278: Student progress tracking
+**As a** student **I want** my element progress tracked **so that** my teacher sees what I have covered.
+- **Epic:** EP-35 · **Codons:** 23 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `track_progress` creates/updates entries (defaults `element`/`visited`), broadcasts `progress_updated`.
+- **Test:** `test/ret_web/channels/hub_channel_test.exs` (`# US-278`)
+
+### US-279: My progress retrieval
+**As a** student **I want** `get_my_progress` to return my entries **so that** I can resume where I stopped.
+- **Epic:** EP-35 · **Codons:** 23 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Empty list when none; tracked entries returned; room progress via `get_room_progress`.
+- **Test:** `test/ret_web/channels/hub_channel_test.exs` (`# US-279`)
+
+### US-280: Analytics aggregates progress and quiz summaries
+**As a** teacher **I want** `GET /hubs/:id/analytics` to aggregate student progress and quiz summary **so that** I can assess the class.
+- **Epic:** EP-35 · **Codons:** 23–24 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Creator-only; `room` stats, `students` (progress entries), `quiz_summary` (count, participants, averages); 403 for non-creators, 404 for missing hubs.
+- **Test:** `test/ret_web/controllers/api/hub_controller_analytics_test.exs` (`# US-280`)
+
+### US-281: Progress schema is validated
+**As a** developer **I want** the `user_progress` schema to validate its fields **so that** progress data stays clean.
+- **Epic:** EP-35 · **Codons:** 23 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Required fields (hub_id, session_id, element_slug, element_type); valid status/element_type values enforced.
+- **Test:** `test/ret/user_progress_test.exs` (`# US-281`)
+
+## EP-36 — Content Management API (existing code)
+
+> **Goal:** *As a teacher, student, and admin, the fork's content APIs (hubs, scenes, projects, assets, credentials, media) behave correctly and are guest-safe.*
+
+### US-282: Hub lifecycle API
+**As a** teacher **I want** create/delete/update/copy/bulk-archive hubs **so that** rooms are manageable by API.
+- **Epic:** EP-36 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `HubController` create/delete/update (ownership-enforced), copy, bulk_archive work; guests get 200-empty.
+- **Test:** `.../api/hub_controller_test.exs` (`# US-282`)
+
+### US-283: Scene show/create/update
+**As a** teacher **I want** scene endpoints (show, create, update, projectless) **so that** environments can be managed.
+- **Epic:** EP-36 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Public show returns scene; authenticated create/update works; guest access 200-empty.
+- **Test:** `.../api/scene_controller_test.exs` (`# US-283`)
+
+### US-284: Projects with assets
+**As a** teacher **I want** project CRUD, publish, and project-assets listing **so that** lessons can be authored.
+- **Epic:** EP-36 · **Codons:** 38–41 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Project index/show/create/update/delete + publish + assets endpoints behave; guest returns 200-empty.
+- **Test:** `.../api/projects_controller_test.exs` + `.../api/project_assets_controller_test.exs` (`# US-284`)
+
+### US-285: Asset upload/delete
+**As a** teacher **I want** asset create/delete **so that** media files can be managed.
+- **Epic:** EP-36 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `AssetsController` create/delete; guest access 200-empty.
+- **Test:** `.../api/assets_controller_test.exs` (`# US-285`)
+
+### US-286: Credentials via v2_alpha
+**As a** developer **I want** the v2_alpha credentials API **so that** clients can manage credentials.
+- **Epic:** EP-36 · **Codons:** 42–45 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `POST /api/v2_alpha/credentials` create/index/update/show flow; guest access 200-empty.
+- **Test:** `.../api/credentials_controller_test.exs` (`# US-286`)
+
+### US-287: Media upload endpoint
+**As a** student **I want** `POST /api/v1/media` **so that** I can upload media into rooms.
+- **Epic:** EP-36 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Media create endpoint returns a valid result or a clear error.
+- **Test:** `.../api/media_controller_test.exs` (`# US-287`)
+
+### US-288: Avatars and GLTF delivery
+**As a** student **I want** avatar create/update and GLTF delivery **so that** my avatar is consistent.
+- **Epic:** EP-36 · **Codons:** 00–13 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Avatar CRUD + `base.gltf`/`avatar.gltf` routes exist.
+- **Test:** none yet
+
+### US-289: App config and account administration
+**As an** admin **I want** app-config and account admin endpoints **so that** the instance is configurable.
+- **Epic:** EP-36 · **Codons:** 50–53 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - App-config index/create; account create/delete/update; admin-gated.
+- **Test:** `.../api/app_config_controller_test.exs` + `.../api/account_controller_test.exs` (`# US-289`)
+
+## EP-37 — Security Hardening & Request Handling (existing code)
+
+> **Goal:** *As an admin, the fork is hardened — CSP, crash-proof auth handling, and admin-gated endpoints.*
+
+### US-290: CSP on API responses
+**As a** developer **I want** a Content-Security-Policy on API responses **so that** XSS surface is reduced.
+- **Epic:** EP-37 · **Codons:** 31 · **Status:** ✅ tested
+- **Acceptance criteria:**
+  - API responses include CSP with `default-src`; fork removed `unsafe-inline` from `script-src` (commit `1a9065aa`).
+- **Test:** `e2e/epics/ep-02-chemistry-content.spec.ts` (`US-290`)
+
+### US-291: Invalid auth tokens never crash the client
+**As a** student **I want** endpoints with invalid tokens to answer empty JSON **so that** the frontend stays functional.
+- **Epic:** EP-37 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - `AuthErrorHandler` returns HTTP 200 empty paginated JSON for `:auth_required` (commit `e10098c0`); same philosophy across controllers.
+- **Test:** `.../api/*_controller_test.exs` guest-200 tests (`# US-291`)
+
+### US-292: Invalid tokens degrade to unauthenticated
+**As a** developer **I want** `VerifyHeader allow_blank: true` **so that** invalid tokens are treated as unauthenticated rather than fatal.
+- **Epic:** EP-37 · **Codons:** 00–13 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Invalid token on `:auth_optional` paths behaves as guest (200-empty), no crash.
+- **Test:** `.../api/room_access_controller_test.exs` (`# US-292`)
+
+### US-293: Per-resolver authorization
+**As a** developer **I want** authorization enforced per GraphQL resolver **so that** data access is controlled.
+- **Epic:** EP-37 · **Codons:** 31 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `Authorization` enforced on a per-resolver basis.
+- **Test:** none yet
+
+### US-294: Admin-only endpoints
+**As an** admin **I want** app-configs, accounts, and the postgrest/ita proxies admin-gated **so that** sensitive APIs stay privileged.
+- **Epic:** EP-37 · **Codons:** 31 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Admin-gated routes reject non-admins; app-config/account tests cover the gate.
+- **Test:** `.../api/app_config_controller_test.exs` + `.../api/account_controller_test.exs` (`# US-294`)
+
+### US-295: Disabled accounts cannot enter rooms
+**As an** admin **I want** disabled accounts blocked from joining **so that** deactivated users lose access.
+- **Epic:** EP-37 · **Codons:** 31 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Joining a hub with a disabled account fails; `forbid_disabled_accounts` plug applies.
+- **Test:** `test/ret_web/channels/hub_channel_test.exs` (`# US-295`)
+
+### US-296: TLS-only with canonical domain
+**As a** student **I want** all traffic over TLS with canonical redirects **so that** connections are secure.
+- **Epic:** EP-37 · **Codons:** 31 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `ssl_only` + `canonicalize_domain` plugs active in secure mode (live TLS verified via US-101).
+- **Test:** none yet
+
+### US-297: Public-API access gate for v2_alpha
+**As** a developer **I want** the v2_alpha public-access gate enforced **so that** the GraphQL/credentials API is gated.
+- **Epic:** EP-37 · **Codons:** 42–45 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `require_public_api_access` pipeline gates v2_alpha.
+- **Test:** none yet
+
+## EP-38 — Operations, Health & Content Delivery (existing code)
+
+> **Goal:** *As an admin and operator, the fork reports health and delivers content reliably across subdomains.*
+
+### US-298: Health endpoint reports system checks
+**As an** admin **I want** `GET /health` to check DB, page cache, and room routing **so that** outages are detected.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Returns `{healthy, checks}` with db/cache-hubs/cache-spoke/room-routing; healthy → 200.
+- **Test:** `test/ret_web/controllers/health_controller_test.exs` (`# US-298`)
+
+### US-299: Degraded health reports 503
+**As an** admin **I want** failed checks to yield 503 **so that** load balancers can drain the node.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Any failing check → 503; error path test tagged `dev_only` (needs a failing downstream).
+- **Test:** `test/ret_web/controllers/health_controller_test.exs` (`# US-299`)
+
+### US-300: Page cache warming
+**As an** admin **I want** hubs/spoke pages cached and warmed **so that** the first visitors are fast.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Cachex page chunks for hubs index/hub and spoke index; warmer task present.
+- **Test:** none yet
+
+### US-301: Room routing to an available host
+**As an** admin **I want** room assigner to pick an available hub host **so that** rooms land on live nodes.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `RoomAssigner.get_available_host/1` returns a host; health check uses it.
+- **Test:** none yet
+
+### US-302: Safari/iOS manifest
+**As a** student **I want** a valid manifest for Safari/iOS **so that** the app installs/loads on Apple devices.
+- **Epic:** EP-38 · **Codons:** 46–49 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - Minimal manifest served for Safari/iOS instead of 404 (commit `16a148ff`).
+- **Test:** none yet
+
+### US-303: Prometheus metrics
+**As an** admin **I want** a metrics plug for Prometheus **so that** the instance is scrapable
+rapable.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🚧 built
+- **Acceptance criteria:**
+  - `prometheus_metrics_plug` exposes metrics.
+- **Test:** none yet
+
+### US-304: API-internal telemetry endpoints
+**As** a developer **I want** `/api-internal` presence, storage, and asset-rewrite endpoints **so that** dashboards can query internals.
+- **Epic:** EP-38 · **Codons:** 32 · **Status:** 🧪 service-tested
+- **Acceptance criteria:**
+  - Presence (show/range_max), storage, rewrite assets endpoints answer correctly behind dashboard auth.
+- **Test:** `.../api-internal/*_controller_test.exs` (`# US-304`)
+
+### US-305: Landing and subdomain delivery
+**As a** student **I want** the landing page and room subdomains served correctly over TLS **so that** the platform is reachable.
+- **Epic:** EP-38 · **Codons:** 50–53 · **Status:** ✅ tested
+- **Acceptance criteria:**
+  - `/`, `/rooms`, `/classroom` serve the app shell over TLS (HTTP 200, `App` title).
+- **Test:** `e2e/epics/ep-01-auth-rooms.spec.ts` (`US-305`)
 
 ## How to Extend
 

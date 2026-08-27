@@ -36,7 +36,7 @@ async function getApiWithRetry(request: APIRequestContext, path: string, tries =
 }
 
 test.describe("US-013 / US-021 / US-097 element API payload + CSP", () => {
-  test("US-013 US-021 US-097 fe returns JSON payload with pagination and CSP header", async ({ request }) => {
+  test("US-013 US-021 US-097 US-244 US-290 fe returns JSON payload with pagination and CSP header", async ({ request }) => {
     const res = await getApiWithRetry(request, "/api/v1/hubs/element/fe");
     expect(res.status()).toBe(200);
     const body = await res.json();

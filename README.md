@@ -139,7 +139,13 @@ k6 run e2e/load-test.js
 ### User Stories & Live Tests
 
 User epics and user stories covering the whole roadmap live in
-[`docs/user-stories.md`](docs/user-stories.md) (30 epics, `US-001…US-241`). Each story
+[`docs/user-stories.md`](docs/user-stories.md) (38 epics, `US-001…US-305`). Each story
+is written in the standard `As a <persona>, I want <capability>, so that <benefit>`
+format. Epics `EP-01…EP-30` follow the roadmap (Sprints 1–13, upstream Hubs,
+platform-capabilities); epics `EP-31…EP-38` are **as-built** — mapped directly to the
+fork's existing code in `services/reticulum` (element API, room-access tokens, rate
+limiting, RBAC, classroom sync/progress, content APIs, security hardening, ops) with
+`US-242…US-305`.
 carries a status: `✅ tested` (live), `🧪 service-tested` (Reticulum `mix test`),
 `🚧 built`, or `📋 planned`.
 
