@@ -1,0 +1,16 @@
+{
+  "name": "Chemie Lernen Hubs",
+  "short_name": "ChemieHubs",
+  "description": "Soziale VR und kollaborative 3D-Räume für chemie-lernen.org",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2d6a4f",
+  "background_color": "#1b1b1b"
+}
