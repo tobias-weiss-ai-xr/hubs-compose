@@ -139,7 +139,7 @@ k6 run e2e/load-test.js
 ### User Stories & Live Tests
 
 User epics and user stories covering the whole roadmap live in
-[`docs/user-stories.md`](docs/user-stories.md) (38 epics, `US-001…US-305`). Each story
+[`docs/user-stories.md`](docs/user-stories.md) (30 epics, `US-001…US-241`). Each story
 carries a status: `✅ tested` (live), `🧪 service-tested` (Reticulum `mix test`),
 `🚧 built`, or `📋 planned`.
 
