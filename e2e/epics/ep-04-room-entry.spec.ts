@@ -5,13 +5,17 @@ import { test, expect, APIRequestContext, APIResponse, Page } from "@playwright/
  * Story IDs reference docs/user-stories.md.
  * Target: https://hubs.chemie-lernen.org (production).
  *
- * ⚠️ STATUS 2026-08-26: these tests are INTENTIONALLY RED until the defects are fixed:
+ * ⚠️ STATUS 2026-08-27: intentionally red until the room-entry defect is fixed.
  *   1. US-016 / US-012 — the Hubs client renders `HomePage` for EVERY path. The URL
  *      changes (room created: /<hub_id>/<slug>) but the view never switches to the room.
  *      Reproduced even for direct navigation to an existing room URL.
- *   2. US-018 — landing-page images render with `src=""` (logo + hero screenshot), so
- *      nothing is displayed.
- * Once the client/router/config defect is fixed, these must go GREEN. Do not "fix" the
+ *      Root cause: the frontend is served as a static `dist` snapshot by a Python
+ *      http.server behind Traefik instead of Reticulum's dynamic page rendering, so the
+ *      SPA boots as HomePage for all paths and never enters a room.
+ *   2. US-018 — landing-page images rendered with `src=""` (logo + hero screenshot).
+ *      FIXED 2026-08-27: injected `window.APP_CONFIG.images` into dist/index.html and
+ *      corrected manifest icon sizes (24x24) on the live host. This test now passes.
+ * Once the room-entry defect is fixed, the US-016 tests must go GREEN. Do not "fix" the
  * tests by weakening the assertions — fix the platform.
  */
 
