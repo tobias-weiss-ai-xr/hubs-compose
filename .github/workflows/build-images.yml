@@ -16,7 +16,9 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Build on the self-hosted "legion" runner: persistent BuildKit cache mounts
+    # (node_modules/.cache/webpack) make incremental client builds fast.
+    runs-on: [self-hosted, legion]
     permissions:
       contents: read
       packages: write
