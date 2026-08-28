@@ -27,9 +27,16 @@
         (no `Failed to load glTF model`).
 - [x] 4. Add/extend e2e regression tests
   - [x] 4.1 `e2e/scene-room.spec.ts`: HubView shape regression, `GET /api/v1/scenes/:sid` contract
-        (200/404), element-query scene metadata, and a real acceptance test that joins an element
-        room and asserts `scene.model_url` is a reachable `model/gltf-binary` (was `test.fixme`).
+        (200/404), element-query scene metadata, and a real acceptance test that joins the canonical
+        Wasserstoff room (`5Vnt5wx`) and asserts `scene.model_url` is a reachable `model/gltf-binary`.
   - [x] 4.2 `e2e/pse-rooms.spec.ts`: element-query hub carries `scene` with `scene_id`.
+  - [x] 4.3 `e2e/file-serving.spec.ts`: regression guards for the GLB/screenshot deployment fix —
+        archetype scene metadata carries `/files/` URLs, the scene GLB serves `200 model/gltf-binary`,
+        the screenshot serves `200 image/png`, and a missing/forbidden file is NOT `403` (host mismatch)
+        or `500` (crash). These lock in the `Ret.Storage` scheme + `passHostHeader` fixes.
+  - [x] 4.4 `e2e/infra-health.spec.ts`: reticulum `/health` answers `200` and the dialog signaling
+        endpoint is reachable on `:4443` (guards against the dialog silently regressing to
+        bridge+NAT port publishing, which hits the VE's netfilter/numiptent quota and fails to start).
 - [x] 5. Validate & ship
   - [x] 5.1 `openspec validate themed-element-scenes` clean.
   - [x] 5.3 Restore steps documented in `docs/epics-user-stories.md` (US-2.3 AC).
