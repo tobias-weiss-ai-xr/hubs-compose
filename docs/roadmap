@@ -1,0 +1,66 @@
+# PSE Room & Hubs Platform — Roadmap & Sprint Plan
+
+Derived from `docs/epics-user-stories.md`. Statuses as of 2026-08-27.
+
+## Theme status at a glance
+
+| Epic | Status | Why |
+|---|---|---|
+| 1 — Rooms work end-to-end | DONE → hardening | Join chain fixed; persistence/weak-conn remaining |
+| 2 — Themed 3D scenes per room | IN PROGRESS | `scene:null` blocker; assets recovered, not wired in |
+| 3 — Discoverable from PSE site | DONE → polish | pse_url + query live; occupancy badges TODO |
+| 4 — Classrooms & moderation | TODO | Needed for school adoption |
+| 5 — Avatars | TODO | 24 recovered avatars; storage blobs preserved |
+| 6 — Reliability & ops | IN PROGRESS | Certs/veth/UA-crash open items |
+| 7 — Observability & analytics | TODO | Statix → prometheus |
+| 8 — Content & pedagogy | TODO | Interactive models / whiteboard |
+
+## Sequenced roadmap
+
+### Milestone A — "Rooms that aren't empty" (next 1–2 weeks) · focuses Epic 2
+Goal: a student joining any element room lands in a real, themed 3D space.
+1. Restore 5 archetype scenes into live `ret_dev` from recovered GLBs (v2).
+2. Wire `symbol_to_archetype.json` → assign each element room a scene.
+3. Add e2e: room join returns `hub.scene` non-null + GLB loads.
+4. Verify load time budget (<5 s) for mid-range laptops.
+
+### Milestone B — "Safe classrooms" (2–4 weeks) · Epic 4 + parts of 6
+Goal: a teacher can run a lesson without IT intervention.
+1. entry-mode approval toggle + pending-join queue.
+2. moderator mute/kick via RS512 perms token (`kick_users` claim).
+3. room close/delete; orphaned veth GC cron; `page_controller` UA guard.
+
+### Milestone C — "It feels like us" (1 month) · Epic 5 + 3.3/3.4
+Goal: recognizable identity + occupancy on PSE page.
+1. Restore 24 avatars; avatar picker.
+2. PSE page occupancy badge + per-session room creation.
+3. TLS cert renewal monitor; secrets cleanup in public history.
+
+### Milestone D — "We can see it working" (1–2 months) · Epic 7 + 8
+Goal: observability + pedagogy.
+1. Statix→prometheus CCU/join-rate dashboards; alert on join-crash counter.
+2. Privacy-safe usage stats.
+3. Interactive element models; shared whiteboard; quiz board.
+
+## Sprint board (rolling)
+
+**Current sprint (A):**
+- [ ] Restore archetype scenes (assign_hubs.py + insert_scenes_route.py) — needs owner token (private `hubs-compose-state`)
+- [ ] Assign scenes to all 171 element rooms (`symbol_to_archetype.json`)
+- [ ] e2e: `hub.scene` non-null on join
+
+**Backlog (next):**
+- [ ] Dialog TLS renewal monitor (US-6.2)
+- [ ] Orphan veth GC timer (US-6.3)
+- [ ] `page_controller.ex:480` UA guard (US-6.4)
+
+**Icebox:**
+- [ ] Avatars pipeline (Epic 5)
+- [ ] Moderation (Epic 4)
+- [ ] Analytics (Epic 7)
+
+## Definition of Done (per story)
+- Acceptance criteria in `epics-user-stories.md` met.
+- Every story touching join/create/query adds/extends an `e2e/` test (suite 25/25).
+- No secrets committed to public `hubs-compose`; use private `hubs-compose-state`.
+- Change merged only after `npx playwright test` is green against live.
