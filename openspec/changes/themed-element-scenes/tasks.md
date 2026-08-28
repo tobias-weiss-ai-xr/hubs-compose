@@ -8,11 +8,17 @@
   - [ ] 2.1 Load `symbol_to_archetype.json` + `scene_sids_v2.json`
   - [ ] 2.2 Run `assign_hubs.py` (or server-side default) over the 171 element rooms
   - [ ] 2.3 Spot-check: Wasserstoff-Raum (`5Vnt5wx`) and a sampling across the table have `hub.scene` set
-- [ ] 3. Verify the join path serves the scene
+- [ ] 3. Surface + verify the scene on the join path
+  - [ ] 3.0 **Gap (discovered 2026-08-27):** reticulum `HubView` does NOT serialize `scene`
+        into the `hub:<sid>` join response (keys are host/entry_mode/name/..., no `scene`/
+        `scene_id`). Restoring data alone is insufficient — add scene surfacing to HubView
+        (e.g. attach `scene` from the hub's scene association) before 3.1 can pass.
   - [ ] 3.1 `hub.hub.scene` non-null in `hub:join` response
   - [ ] 3.2 Client no longer logs `Failed to load glTF model`; scene renders in <5 s
 - [ ] 4. Add/extend e2e regression tests
-  - [ ] 4.1 `e2e/ws-join.spec.ts`: after hub join, assert `response.hubs[0].scene` populated
+  - [ ] 4.1 `e2e/scene-room.spec.ts` added: HubView shape regression, `GET /api/v1/scenes/:sid`
+        contract (200/404), element-query scene metadata. Full target guard is `test.fixme`
+        (goes green after 3.0 + restore).
   - [ ] 4.2 `e2e/pse-rooms.spec.ts`: element-query hub carries `scene` with `scene_id`
 - [ ] 5. Validate & ship
   - [ ] 5.1 `openspec validate themed-element-scenes`

@@ -22,6 +22,7 @@ transient 403. Do not run against prod in parallel with other hub-creating load.
 |---|---|
 | `ws-join.spec.ts` | **Room-join regression** for the 2026-08-27 "join crashed" fix chain: Phoenix WS connect → `ret` channel join → `hub:<sid>` join returns full hub JSON with populated `host` (RoomAssigner) → presence → dialog protoo WS + `getRouterRtpCapabilities` (TLS/announced-IP) |
 | `pse-rooms.spec.ts` | Element room create → element query round-trip, `pse_url` injection, pagination, `/api/v1/meta` host |
+| `scene-room.spec.ts` | Scene capability coverage (Epic 2 / Milestone A): HubView join-response shape regression, `GET /api/v1/scenes/:sid` contract; real post-restore assertion is `test.fixme` (blocked on scene restore + HubView scene surfacing) |
 | `pse-integration.spec.ts` | Hub-create embed contract (`hub_id`/`url`/`embed_token`/`creator_assignment_token`) |
 | `auth-flow.spec.ts` | Hub create auth_optional, invalid element 400, element query, classroom flow, hub.html `APP.hub` host embed, frontend smoke |
 | `dialog-auth.spec.ts` | Dialog protoo subprotocol requirement (no REST `/rooms` on this dialog) |

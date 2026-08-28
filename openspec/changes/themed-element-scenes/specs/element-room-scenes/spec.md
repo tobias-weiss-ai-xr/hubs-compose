@@ -23,6 +23,10 @@ owned by an educator account) and serve them via `GET /api/v1/scenes/:sid` (200)
 The `hub:join` Phoenix channel response SHALL include the scene so the Hubs client loads the
 model (no `Failed to load glTF model` error).
 
+> **Implementation note (2026-08-27):** reticulum's `HubView` currently does NOT serialize a
+> `scene` field into the join response. Satisfying this requires a HubView change to attach the
+> hub's scene association, not only a data restore.
+
 - **WHEN** a client joins `hub:<sid>`
 - **THEN** `response.hubs[0].scene` is non-null and references a loadable GLB
 
