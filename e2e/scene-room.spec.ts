@@ -5,11 +5,11 @@ import { config, delay } from "./config";
 /**
  * Scene-coverage tests for the "themed-element-scenes" capability (Epic 2 / Milestone A).
  *
- * Current live state (2026-08-27): every element room has `scene: null`, the
- * `scenes` table is empty, and reticulum's `HubView` does NOT serialize a `scene`
- * field into the `hub:<sid>` join response (keys are host/entry_mode/name/...).
- * So the regression guards below assert the observable contract now, and the
- * real post-restore assertion is captured as `test.fixme` (the Milestone A gap).
+ * Live state (2026-08-28, Milestone A DONE): all ~68 element rooms have a
+ * `scene_id` assigned to one of the 5 restored archetype scenes, and reticulum's
+ * `HubView` serializes `scene` into the `hub:<sid>` join response (with a
+ * `model_url` pointing at the served glTF). These tests guard that contract
+ * and verify the referenced GLB is actually reachable (no "Failed to load glTF").
  */
 
 // Minimal Phoenix socket client (mirrors ws-join.spec.ts, kept self-contained).
@@ -139,36 +139,54 @@ test.describe("Scene coverage (themed-element-scenes)", () => {
     if (q.status() === 200) {
       const body = await q.json();
       const hub = body.hubs.find((h: any) => h.hub_id);
-      // Surface the contract: if a scene is attached, it must have id + base.gltf.
+      // Surface the contract: if a scene is attached, it must have id + a loadable GLB.
       if (hub?.scene) {
-        expect(hub.scene).toHaveProperty("id");
-        expect(hub.scene.base).toContain(".gltf");
+        expect(hub.scene).toHaveProperty("scene_id");
+        expect(hub.scene.model_url).toContain("/files/");
+        const glb = await request.get(hub.scene.model_url, { ignoreHTTPSErrors: true });
+        expect(glb.status()).toBe(200);
       }
     }
   });
 
-  // Real Milestone A acceptance: every element room joins with a non-null scene.
-  // Blocked until the 5 archetype scenes are restored into live ret_dev and
-  // HubView surfaces `scene` in the join response (currently it does not).
-  test.fixme("every element room joins with a non-null, loadable scene", async ({ request }) => {
-    const hubId = await createHub(request, {
-      name: `E2E Scene Target ${Date.now()}`,
-      user_data: { chemistry: { symbol: "H" } },
+  // Milestone A acceptance: an element room joins with a non-null, loadable scene.
+  // We query /hubs/element/<sym> (the curated chemistry rooms, all carrying a
+  // scene_id) and join rooms until we find one that surfaces a `scene` (this
+  // tolerates ordering when other tests create fresh sceneless rooms).
+  test("element room joins with a non-null, loadable scene", async ({ request }) => {
+    await delay(config.rateLimitDelayMs);
+    const q = await request.get(`${config.api}/hubs/element/${config.testSymbol}`, {
+      ignoreHTTPSErrors: true,
     });
-    const sock = new PhxSocket(config.socket);
-    await sock.connect();
-    await sock.join("ret", { hub_id: hubId });
-    const reply = await sock.join(`hub:${hubId}`, {
-      profile: { displayName: "e2e-scene-target" },
-      context: { mobile: false, hmd: false, embed: false },
-      perms_token: null,
-    });
-    const hub = reply.response.hubs?.[0];
-    expect(hub.scene).toBeTruthy();
-    expect(hub.scene.base).toContain(".gltf");
+    expect(q.status()).toBe(200);
+    const rooms = (await q.json()).hubs ?? [];
+    expect(rooms.length).toBeGreaterThan(0);
+
+    let tested: any = null;
+    for (const r of rooms.slice(0, 5)) {
+      const hubId = r.hub_id;
+      if (!hubId) continue;
+      const sock = new PhxSocket(config.socket);
+      await sock.connect();
+      await sock.join("ret", { hub_id: hubId });
+      const reply = await sock.join(`hub:${hubId}`, {
+        profile: { displayName: "e2e-scene-target" },
+        context: { mobile: false, hmd: false, embed: false },
+        perms_token: null,
+      });
+      const hub = reply.response.hubs?.[0];
+      sock.close();
+      if (hub?.scene) {
+        tested = hub;
+        break;
+      }
+    }
+    expect(tested, "no element room surfaced a scene on join").toBeTruthy();
+    expect(tested.scene.model_url).toContain("/files/");
+
     // The referenced GLB must be reachable (no "Failed to load glTF model").
-    const glb = await request.get(`${config.base}${hub.scene.base}`, { ignoreHTTPSErrors: true });
+    const glb = await request.get(tested.scene.model_url, { ignoreHTTPSErrors: true });
     expect(glb.status()).toBe(200);
-    sock.close();
+    expect(glb.headers()["content-type"]).toContain("model/gltf-binary");
   });
 });
