@@ -8,6 +8,8 @@
 !files/coturn/certs/key.pem
 !services/reticulum/priv/dev-ssl.cert
 !services/reticulum/priv/dev-ssl.key
+!services/hubs
+!services/hubs/**
 !scripts/
 !Dockerfile.backup
 !crontab
