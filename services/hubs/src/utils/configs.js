@@ -87,7 +87,7 @@ if (!configs.APP_CONFIG.theme) {
   }
 }
 
-const isLocalDevelopment = process.env.NODE_ENV === "development";
+// (isLocalDevelopment removed: assigned but never read — dead code.)
 
 configs.feature = featureName => {
   const value = configs.APP_CONFIG && configs.APP_CONFIG.features && configs.APP_CONFIG.features[featureName];
@@ -102,7 +102,7 @@ configs.feature = featureName => {
 // Branded fallback images. Used whenever APP_CONFIG.images is not populated
 // (e.g. a static production build served by static-server.py without Reticulum's
 // APP_CONFIG injection). This keeps the chemie-lernen.org logos on the landing page.
-let fallbackImages = {
+const fallbackImages = {
   logo: appLogoDark,
   logo_dark: appLogo,
   company_logo: companyLogo,
