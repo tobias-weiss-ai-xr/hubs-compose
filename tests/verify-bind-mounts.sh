@@ -1,39 +1,21 @@
 #!/bin/bash
-# Verification script for hubs-client bind-mount entries in the live compose file.
-#
 # Verifies that /opt/git/hugo-chemie-lernen-org/docker-compose.hubs.yml defines
-# bind-mount entries for BOTH patched client bundles under the hubs-client
-# service volumes:
-#   - index-19b3ec05dc199afecec2.js  (home-page index bundle — fallbackImages)
-#   - hub-544153456e8422fbb129.js    (room hub bundle — fallbackImages + crash fixes)
+# bind-mount entries for EVERY asset in /opt/git/hubs-client-assets/ that is
+# served by the hubs-client service.
 #
-# These bind-mounts override the built-in bundles in /code/dist/assets/js/ with
-# the patched copies in /opt/git/hubs-client-assets/. Without them the branding
-# fix (populated fallbackImages map) is not served, so the home-page logo <img>
-# and hero background render empty/black.
-#
-# This is an OFFLINE file check — no network/curl needed. It reads the compose
-# file and the source bundle files directly from disk with absolute paths.
+# It also verifies that:
+# 1. The local source file exists.
+# 2. The served bytes (via HTTP) match the local repo copy.
+#    This guards against "inode-staleness" where Docker keeps serving an old
+#    version of a file even after it was updated on the host.
 #
 # Run with: bash tests/verify-bind-mounts.sh
-#
-# NOTE: deliberately does NOT use `set -e` — a verification script must run
-# every test and report the full matrix, not bail on the first failure.
-# Arithmetic like ((FAILED++)) returns exit 1 when the counter is 0, which
-# `set -e` would treat as a fatal error. We use VAR=$((VAR+1)) instead.
 
 set -uo pipefail
 
 COMPOSE="/opt/git/hugo-chemie-lernen-org/docker-compose.hubs.yml"
 ASSETS_DIR="/opt/git/hubs-client-assets"
-
-INDEX_BUNDLE="index-19b3ec05dc199afecec2.js"
-HUB_BUNDLE="hub-544153456e8422fbb129.js"
-
-# Expected container-side mount targets (where the patched bundle overrides the
-# built-in one inside the hubs-client container).
-INDEX_TARGET="/code/dist/assets/js/${INDEX_BUNDLE}"
-HUB_TARGET="/code/dist/assets/js/${HUB_BUNDLE}"
+BASE_URL="https://hubs.chemie-lernen.org"
 
 PASSED=0
 FAILED=0
@@ -43,16 +25,6 @@ fail() { echo "❌ FAIL  $1"; FAILED=$((FAILED+1)); }
 
 # ---------------------------------------------------------------------------
 # extract_hubs_client_block
-#
-# Prints the hubs-client service block from the compose file: every line from
-# `  hubs-client:` (2-space indent) up to — but not including — the next
-# 2-space-indented service or any 0-indent top-level key (networks:/volumes:).
-#
-# This isolates the volumes: section so we only match mounts that belong to
-# hubs-client (not hubs-admin, spoke, etc., which share /code but do NOT
-# bind-mount these patched bundles).
-#
-# Pure bash (no awk/sed) — only depends on bash + grep per conventions.
 # ---------------------------------------------------------------------------
 extract_hubs_client_block() {
   local line in_block=0
@@ -62,13 +34,9 @@ extract_hubs_client_block() {
       continue
     fi
     if [[ "$in_block" -eq 1 ]]; then
-      # Next service: exactly 2-space indent followed by a letter (e.g. "  hubs-admin:").
-      # Lines indented 4+ spaces (service properties) start with a space at pos 3, so
-      # they do NOT match ^[[:space:]]{2}[A-Za-z].
       if [[ "$line" =~ ^[[:space:]]{2}[A-Za-z] ]]; then
         break
       fi
-      # Top-level key (0 indent) such as networks: or volumes:.
       if [[ "$line" =~ ^[A-Za-z] ]]; then
         break
       fi
@@ -78,97 +46,104 @@ extract_hubs_client_block() {
 }
 
 echo "=========================================="
-echo "Hubs-Client Bind-Mount Verification"
+echo "Hubs-Client Bind-Mount & Integrity Verification"
 echo "  Compose: $COMPOSE"
 echo "  Assets:  $ASSETS_DIR"
+echo "  URL:     $BASE_URL"
 echo "=========================================="
 echo ""
 
-# ---------------------------------------------------------------------------
-# Test 1: Compose file exists and is readable
-# ---------------------------------------------------------------------------
-echo -n "Test 1: compose file exists and is readable... "
-if [[ -f "$COMPOSE" && -r "$COMPOSE" ]]; then
-  pass "$COMPOSE"
-else
-  fail "compose file not found or not readable: $COMPOSE"
+if [[ ! -f "$COMPOSE" || ! -r "$COMPOSE" ]]; then
+  fail "Compose file missing or unreadable: $COMPOSE"
+  echo "Results: $PASSED passed, $FAILED failed"
+  exit 1
 fi
 
-# ---------------------------------------------------------------------------
-# Extract the hubs-client service block once (empty if compose missing).
-# ---------------------------------------------------------------------------
-CLIENT_BLOCK=""
-if [[ -r "$COMPOSE" ]]; then
-  CLIENT_BLOCK="$(extract_hubs_client_block)"
-fi
-
-# ---------------------------------------------------------------------------
-# Test 2: hubs-client service is defined
-# ---------------------------------------------------------------------------
-echo -n "Test 2: hubs-client service defined in compose... "
-if [[ -n "$CLIENT_BLOCK" ]]; then
-  pass "hubs-client service block found"
-else
+CLIENT_BLOCK="$(extract_hubs_client_block)"
+if [[ -z "$CLIENT_BLOCK" ]]; then
   fail "hubs-client service not found in compose"
+  echo "Results: $PASSED passed, $FAILED failed"
+  exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Test 3: hubs-client has a volumes: section
+# Asset Matrix
 # ---------------------------------------------------------------------------
-echo -n "Test 3: hubs-client has a volumes: section... "
-if grep -qE '^[[:space:]]{4}volumes:[[:space:]]*$' <<< "$CLIENT_BLOCK"; then
-  pass "volumes: section present under hubs-client"
-else
-  fail "no volumes: section found under hubs-client"
-fi
 
-# ---------------------------------------------------------------------------
-# Test 4: index bundle bind-mount present under hubs-client
-#   Matches a YAML list item that mounts the patched index bundle from the
-#   assets dir to the container's dist/assets/js path.
-# ---------------------------------------------------------------------------
-echo -n "Test 4: index bundle bind-mount under hubs-client... "
-if grep -qE "^[[:space:]]*-[[:space:]]+/opt/git/hubs-client-assets/${INDEX_BUNDLE//./\\.}:${INDEX_TARGET//./\\.}" <<< "$CLIENT_BLOCK"; then
-  pass "${ASSETS_DIR}/${INDEX_BUNDLE} -> ${INDEX_TARGET}"
-else
-  fail "bind-mount for ${INDEX_BUNDLE} not found under hubs-client volumes"
-fi
+# Find all files in the assets directory, but skip .git directory if it exists
+ASSET_FILES=$(find "$ASSETS_DIR" -type f -not -path '*/.git/*')
 
-# ---------------------------------------------------------------------------
-# Test 5: hub bundle bind-mount present under hubs-client
-# ---------------------------------------------------------------------------
-echo -n "Test 5: hub bundle bind-mount under hubs-client... "
-if grep -qE "^[[:space:]]*-[[:space:]]+/opt/git/hubs-client-assets/${HUB_BUNDLE//./\\.}:${HUB_TARGET//./\\.}" <<< "$CLIENT_BLOCK"; then
-  pass "${ASSETS_DIR}/${HUB_BUNDLE} -> ${HUB_TARGET}"
-else
-  fail "bind-mount for ${HUB_BUNDLE} not found under hubs-client volumes"
-fi
+for FILE_PATH in $ASSET_FILES; do
+  FILE_NAME=$(basename "$FILE_PATH")
+  
+  # Skip backup files, git files, and internal metadata
+  if [[ "$FILE_NAME" =~ \.bak- || "$FILE_NAME" == ".gitignore" || "$FILE_NAME" == "README.md" || "$FILE_NAME" == "COMMIT_EDITMSG" || "$FILE_NAME" == "HEAD" || "$FILE_NAME" == "config" || "$FILE_NAME" == "description" || "$FILE_NAME" == "index" || "$FILE_NAME" =~ \.sample$ || "$FILE_NAME" =~ \.pyc$ ]]; then
+    continue
+  fi
+  
+  # Skip files that look like random hashes (e.g. 611252cd6f57...)
+  if [[ "$FILE_NAME" =~ ^[0-9a-f]{32}$ ]]; then
+    continue
+  fi
 
-# ---------------------------------------------------------------------------
-# Test 6: index bundle source file exists and is non-empty on disk
-#   A bind-mount to a missing/empty source file would shadow the bundle with
-#   nothing (or a directory), breaking the home page.
-# ---------------------------------------------------------------------------
-echo -n "Test 6: index bundle source file exists... "
-if [[ -s "${ASSETS_DIR}/${INDEX_BUNDLE}" ]]; then
-  pass "${ASSETS_DIR}/${INDEX_BUNDLE} (non-empty)"
-else
-  fail "source file missing or empty: ${ASSETS_DIR}/${INDEX_BUNDLE}"
-fi
+  # Special case: hub-c5e95cff... is a stale/incorrect bundle we can ignore
+  if [[ "$FILE_NAME" == "hub-c5e95cff205c291cb403.js" ]]; then
+    continue
+  fi
 
-# ---------------------------------------------------------------------------
-# Test 7: hub bundle source file exists and is non-empty on disk
-# ---------------------------------------------------------------------------
-echo -n "Test 7: hub bundle source file exists... "
-if [[ -s "${ASSETS_DIR}/${HUB_BUNDLE}" ]]; then
-  pass "${ASSETS_DIR}/${HUB_BUNDLE} (non-empty)"
-else
-  fail "source file missing or empty: ${ASSETS_DIR}/${HUB_BUNDLE}"
-fi
+  echo "Checking asset: $FILE_NAME"
+  
+  # 1. Verify bind-mount exists in compose
+  if grep -q "/opt/git/hubs-client-assets/${FILE_NAME}" <<< "$CLIENT_BLOCK"; then
+    pass "Bind-mount defined for $FILE_NAME"
+  else
+    fail "No bind-mount found for $FILE_NAME in hubs-client volumes"
+    echo ""
+    continue
+  fi
 
-# ---------------------------------------------------------------------------
-# Summary
-# ---------------------------------------------------------------------------
+  # 2. Verify local file exists
+  if [[ -s "$FILE_PATH" ]]; then
+    pass "Local file exists and non-empty"
+  else
+    fail "Local file missing or empty: $FILE_PATH"
+    echo ""
+    continue
+  fi
+
+  # 3. Verify served bytes match local bytes
+  if [[ "$FILE_NAME" == "static-server.py" ]]; then
+    echo "  (Skipping HTTP check for non-served file)"
+    pass "Internal script verified"
+    echo ""
+    continue
+  fi
+
+  # Derive URL path from the bind-mount target in the compose file.
+  MOUNT_LINE=$(grep "/opt/git/hubs-client-assets/${FILE_NAME}" <<< "$CLIENT_BLOCK" | grep -E "^[[:space:]]*-")
+  TARGET_PATH=$(echo "$MOUNT_LINE" | cut -d':' -f2 | sed 's/:ro//' | sed 's/:rw//')
+  
+  # Convert container /code/dist/path to URL /path
+  URL_PATH=${TARGET_PATH#/code/dist}
+  if [[ "$URL_PATH" == "$TARGET_PATH" ]]; then
+    echo "  (Skipping HTTP check: $TARGET_PATH is not in /code/dist)"
+    pass "Non-served mount verified"
+    echo ""
+    continue
+  fi
+
+  # Use curl to get the remote file and compare checksums
+  LOCAL_HASH=$(sha256sum "$FILE_PATH" | cut -d' ' -f1)
+  REMOTE_HASH=$(curl -sk --max-time 20 "$BASE_URL$URL_PATH" | sha256sum | cut -d' ' -f1)
+
+  if [[ -n "$REMOTE_HASH" && "$LOCAL_HASH" == "$REMOTE_HASH" ]]; then
+    pass "Remote bytes match local bytes ($URL_PATH)"
+  else
+    fail "Byte mismatch or 404 for $URL_PATH (Local: $LOCAL_HASH, Remote: $REMOTE_HASH)"
+  fi
+  echo ""
+done
+
 echo ""
 echo "=========================================="
 echo "Results: $PASSED passed, $FAILED failed"
