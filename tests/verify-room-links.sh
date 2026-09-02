@@ -27,6 +27,9 @@
 #      Periodensystem rooms are themed instead of loading the placeholder
 #      environment (empty dark space)
 #   9. Every element-API room carries a scene with model_url (themed rooms)
+#  10. The themed scene GLB has lights baked in (KHR_lights_punctual) —
+#      without lights PBR materials render pitch black (Hubs disables
+#      A-Frame default lights)
 #
 # Run with: bash tests/verify-room-links.sh
 #
@@ -224,6 +227,41 @@ elif [[ "${UNTHEMED:-1}" -eq 0 && "${TOTAL_SCENED:-0}" -gt 0 ]]; then
   pass "All ${TOTAL_SCENED} element-API rooms carry a themed scene"
 else
   fail "${UNTHEMED:-?}/${TOTAL_SCENED:-?} element-API rooms have no scene (would open in empty dark space)"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 10: Scene GLB has lights (no-pitch-black-room regression)
+# ---------------------------------------------------------------------------
+MODEL_URL=$(fetch_element_api | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    for h in d.get('hubs', []):
+        s = h.get('scene') or {}
+        if s.get('model_url'):
+            print(s['model_url'])
+            break
+except Exception:
+    pass
+" 2>/dev/null)
+
+if [[ -n "${MODEL_URL:-}" ]]; then
+  curl -sk --max-time 30 "$MODEL_URL" -o "$TMP_HTML"
+  if python3 - "$TMP_HTML" <<'PYEOF' >/dev/null 2>&1
+import struct, json, sys
+d = open(sys.argv[1], "rb").read()
+assert d[:4] == b"glTF", "not a GLB"
+jl = struct.unpack("<II", d[12:20])[0]
+j = json.loads(d[20:20+jl])
+assert "KHR_lights_punctual" in j.get("extensionsUsed", []), "no lights baked in"
+PYEOF
+  then
+    pass "Scene GLB (${MODEL_URL##*/}) has baked lights (KHR_lights_punctual)"
+  else
+    fail "Scene GLB has no lights — PBR room renders pitch black"
+  fi
+else
+  fail "No scene model_url found — cannot verify baked lights"
 fi
 
 echo ""
