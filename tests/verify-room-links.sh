@@ -138,16 +138,27 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Test 5: Legacy broken URL /hub/<hub_id>/<slug> falls back to index.html
+# Test 5: Legacy /hub/<id>/<slug> URLs 301-redirect to canonical /<id>/<slug>
 # ---------------------------------------------------------------------------
-# This documents the failure mode. The static server is expected to serve the
-# SPA fallback here; the client bundles must simply never generate this form.
+# Safety net for links bookmarked/copied while the client generated the
+# /hub/ prefix (chemie-portal bug, fixed 2026-09-02). The redirect (not a
+# rewrite) is mandatory: at /hub/... the client would parse "hub" as the
+# room ID. Redirect followed must land on hub.html (ui-root).
 if [[ -n "${ROOM_ID:-}" ]]; then
-  curl -sk --max-time 30 "https://${HOST}/hub/${ROOM_ID}/${ROOM_SLUG}" -o "$TMP_HTML"
-  if grep -q 'id="home-root' <<< "$(cat "$TMP_HTML")"; then
-    pass "Legacy /hub/<id>/<slug> URL falls back to index.html (client must not generate it — bundle verified in Test 1)"
+  LOCATION=$(curl -sk -o /dev/null -w '%{http_code} %{redirect_url}' \
+    --max-time 30 "https://${HOST}/hub/${ROOM_ID}/${ROOM_SLUG}")
+  REDIRECT_CODE=${LOCATION%% *}
+  REDIRECT_TARGET=${LOCATION#* }
+  if [[ "$REDIRECT_CODE" == "301" && "$REDIRECT_TARGET" == "https://${HOST}/${ROOM_ID}/${ROOM_SLUG}" ]]; then
+    pass "Legacy /hub/<id>/<slug> URL 301-redirects to canonical /<id>/<slug>"
   else
-    pass "Legacy /hub/<id>/<slug> URL does not serve index.html (routing changed? informational)"
+    fail "Legacy /hub/<id>/<slug> URL: expected 301 -> /${ROOM_ID}/${ROOM_SLUG}, got '${LOCATION}'"
+  fi
+  FOLLOWED=$(curl -skL --max-time 30 "https://${HOST}/hub/${ROOM_ID}/${ROOM_SLUG}" | grep -o 'id="ui-root' | head -1)
+  if [[ -n "$FOLLOWED" ]]; then
+    pass "Following the legacy redirect serves hub.html (ui-root)"
+  else
+    fail "Following the legacy redirect does not serve hub.html"
   fi
 fi
 
