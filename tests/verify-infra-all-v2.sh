@@ -1,10 +1,9 @@
 #!/bin/bash
-# verify-infra-all-v2.sh — aggregate runner executing all 7 infrastructure test
-# scripts from Batch 2 AND all 5 new tests from Batch 3 (IT-9 through IT-13),
-# reporting a combined summary.
+# verify-infra-all-v2.sh — aggregate runner executing all 13 infrastructure test
+# scripts (7 from Batch 2 + 6 from Batch 3), reporting a combined summary.
 #
 # Executes:
-#   Batch 2 (7 infrastructure tests from original verify-infra-all.sh):
+#   Batch 2 (7 infrastructure tests):
 #     1. verify-docker-health.sh             all hubs-stack containers running/healthy
 #     2. verify-traefik-routing.sh           4 Traefik routers → correct backends
 #     3. verify-reticulum-api.sh             /api/v1/meta 200 + expected fields
@@ -12,17 +11,13 @@
 #     5. verify-spoke-admin.sh              /spoke/ + /admin/ serve HTML
 #     6. verify-turn-service.sh             coturn Up, port 3478, config valid
 #     7. verify-client-bundles.sh           JS bundles >100KB + .map HTTP 200
-#   Batch 3 (5 branding tests from IT-9 through IT-13):
-#     8. verify-bundle-patch.sh             offline: 8 fallbackImages keys present
-#                                          in both patched client bundles
-#     9. verify-bind-mounts.sh              offline: patched bundles bind-mounted
-#                                          into hubs-client in the compose file
-#    10. verify-asset-urls.sh               live:    fallback image + cubemap URLs
-#                                          return HTTP 200
-#    11. verify-bundle-regression.sh        live+off: EMPTY fallbackImages pattern
-#                                          regression guard on live + patched bundles
-#    12. verify-static-server-routing.sh    live+off: static-server.py SPA rewrites
-#                                          (home page, hub.html, room slugs, clean 404)
+#   Batch 3 (6 new tests — IT-9 through IT-14):
+#     8. verify-css-assets.sh               CSS stylesheets HTTP 200 + text/css
+#     9. verify-js-assets.sh                all JS bundles HTTP 200 + .map 200
+#    10. verify-dialog-service.sh           hubs-dialog healthy + /dialog/ 200
+#    11. verify-postgrest.sh                container Up + responds on Docker net
+#    12. verify-mailrelay.sh                hubs-mailrelay healthy + /mailrelay 200
+#    13. verify-asset-content-types.sh      correct Content-Type for CSS/JS/PNG/JPG
 #
 # Each sub-script is a single pass/fail entry in the AGGREGATE summary; the
 # runner exits non-zero if ANY sub-script failed. Full per-test output of
@@ -44,7 +39,7 @@ set -uo pipefail
 # the caller's CWD.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# The 12 verification scripts, in execution order (Batch 2 first, then Batch 3).
+# The 13 verification scripts, in execution order (Batch 2 first, then Batch 3).
 SCRIPTS=(
   "verify-docker-health.sh"
   "verify-traefik-routing.sh"
@@ -53,11 +48,12 @@ SCRIPTS=(
   "verify-spoke-admin.sh"
   "verify-turn-service.sh"
   "verify-client-bundles.sh"
-  "verify-bundle-patch.sh"
-  "verify-bind-mounts.sh"
-  "verify-asset-urls.sh"
-  "verify-bundle-regression.sh"
-  "verify-static-server-routing.sh"
+  "verify-css-assets.sh"
+  "verify-js-assets.sh"
+  "verify-dialog-service.sh"
+  "verify-postgrest.sh"
+  "verify-mailrelay.sh"
+  "verify-asset-content-types.sh"
 )
 
 PASSED=0
@@ -68,8 +64,10 @@ fail() { echo "❌ FAIL  $1"; FAILED=$((FAILED+1)); }
 
 echo "=========================================="
 echo "Infrastructure Verification — Aggregate Runner v2"
-echo "  12 sub-scripts: 7 infrastructure (Batch 2) +"
-echo "  5 branding (Batch 3: IT-9 through IT-13)"
+echo "  13 sub-scripts: 7 from Batch 2 + 6 from Batch 3"
+echo "  (docker health, traefik, reticulum, TLS, spoke+admin,"
+echo "   TURN, bundles, CSS, JS, dialog, postgrest, mailrelay,"
+echo "   content-types)"
 echo "=========================================="
 
 # ---------------------------------------------------------------------------
@@ -105,7 +103,7 @@ run_subscript() {
 }
 
 # ---------------------------------------------------------------------------
-# Run all 12 sub-scripts. Each runs to completion; failures are collected and
+# Run all 13 sub-scripts. Each runs to completion; failures are collected and
 # reported in the aggregate summary. No short-circuiting.
 # ---------------------------------------------------------------------------
 ALL_OK=0
