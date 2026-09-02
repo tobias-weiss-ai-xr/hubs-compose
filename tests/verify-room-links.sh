@@ -23,6 +23,10 @@
 #   6. The landing page itself still serves index.html (home-root marker)
 #   7. Element API (Periodensystem room list) returns rooms whose canonical
 #      /<hub_id>/<slug> URLs serve hub.html (end-to-end user story)
+#   8. Bundle's create call passes the ElementRoom scene id (mhezdAw) so new
+#      Periodensystem rooms are themed instead of loading the placeholder
+#      environment (empty dark space)
+#   9. Every element-API room carries a scene with model_url (themed rooms)
 #
 # Run with: bash tests/verify-room-links.sh
 #
@@ -48,6 +52,22 @@ FAILED=0
 
 pass() { echo "✅ PASS  $1"; PASSED=$((PASSED+1)); }
 fail() { echo "❌ FAIL  $1"; FAILED=$((FAILED+1)); }
+
+# The element API throttles to ~1 request/second per IP (403 "Forbidden"
+# beyond a small burst — measured 200,200,403,403 on rapid-fire). Pace every
+# call and retry on throttle responses.
+fetch_element_api() {
+  local attempt body
+  for attempt in 1 2 3 4 5; do
+    sleep 1.1
+    body=$(curl -sk --max-time 30 "https://${HOST}/api/v1/hubs/element/h" 2>/dev/null)
+    if [[ -n "$body" && "$body" != "Forbidden"* ]]; then
+      printf '%s' "$body"
+      return 0
+    fi
+  done
+  return 1
+}
 
 echo "=========================================="
 echo "Room Link (Periodensystem) Verification"
@@ -88,8 +108,7 @@ fi
 # ---------------------------------------------------------------------------
 # Helper: pick a live room id from the element API (Periodensystem H list)
 # ---------------------------------------------------------------------------
-read -r ROOM_ID ROOM_SLUG <<< "$(curl -sk --max-time 30 "https://${HOST}/api/v1/hubs/element/h" 2>/dev/null \
-  | python3 -c "
+read -r ROOM_ID ROOM_SLUG <<< "$(fetch_element_api | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
@@ -142,8 +161,7 @@ fi
 # ---------------------------------------------------------------------------
 # Test 7: End-to-end — every Periodensystem room link target serves hub.html
 # ---------------------------------------------------------------------------
-ROOM_TARGETS=$(curl -sk --max-time 30 "https://${HOST}/api/v1/hubs/element/h" 2>/dev/null \
-  | python3 -c "
+ROOM_TARGETS=$(fetch_element_api | python3 -c "
 import sys, json
 try:
     d = json.load(sys.stdin)
@@ -172,6 +190,40 @@ if [[ -n "$ROOM_TARGETS" ]]; then
   fi
 else
   fail "Element API returned no rooms with slugs — cannot run end-to-end link check"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 8: Create call in the bundle assigns the themed scene
+# ---------------------------------------------------------------------------
+# Without a scene, new rooms load the placeholder environment (empty dark
+# space). The create call must pass the self-hosted ElementRoom scene sid.
+SCENE_CALLS=$(grep -c -- '-Raum","mhezdAw",!0,null,{chemistry:' "$TMP_BUNDLE" 2>/dev/null || true)
+if [[ "${SCENE_CALLS:-0}" -ge 1 ]]; then
+  pass "Create call passes ElementRoom scene (mhezdAw) — new rooms are themed"
+else
+  fail "Create call does NOT pass a scene — new Periodensystem rooms open in empty dark space"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 9: Element-API rooms are themed (scene with model_url)
+# ---------------------------------------------------------------------------
+read -r UNTHEMED TOTAL_SCENED <<< "$(fetch_element_api | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    hubs = d.get('hubs', [])
+    unthemed = [h['hub_id'] for h in hubs if not (h.get('scene') or {}).get('model_url')]
+    print(len(unthemed), len(hubs))
+except Exception:
+    print('?', '?')
+" 2>/dev/null)"
+
+if [[ "${TOTAL_SCENED:-?}" == "?" ]]; then
+  fail "Element API unreachable — cannot verify themed rooms"
+elif [[ "${UNTHEMED:-1}" -eq 0 && "${TOTAL_SCENED:-0}" -gt 0 ]]; then
+  pass "All ${TOTAL_SCENED} element-API rooms carry a themed scene"
+else
+  fail "${UNTHEMED:-?}/${TOTAL_SCENED:-?} element-API rooms have no scene (would open in empty dark space)"
 fi
 
 echo ""
